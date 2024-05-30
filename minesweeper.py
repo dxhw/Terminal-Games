@@ -202,6 +202,7 @@ def first_click(ty, tx, grid, revealed):
     
 # Main game loop
 def main():
+    clock = pygame.time.Clock()  # Create a clock object
     start_time = time.time()
     grid, revealed = reset_game()
     first = True
@@ -290,8 +291,6 @@ def main():
             win_rect = win_text.get_rect(center=(WIDTH//2, INFO_BAR_HEIGHT * 3 / 4))
             screen.blit(win_text, win_rect)
 
-
-
         for y in range(GRID_HEIGHT):
             for x in range(GRID_WIDTH):
                 rect = pygame.Rect(x * TILE_SIZE, y * TILE_SIZE + INFO_BAR_HEIGHT, TILE_SIZE, TILE_SIZE)
@@ -336,8 +335,10 @@ def main():
                     inner_rect = pygame.Rect(0, 0, TILE_SIZE // 2, TILE_SIZE // 2)
                     inner_rect.center = rect.center
                     pygame.draw.rect(screen, WHITE, inner_rect)
+    
         if not end_time or not time.time() - end_time > 2:
             pygame.display.flip()
+        clock.tick(20)  # Limit the frame rate to 20 FPS
 
 main()
 pygame.quit()
