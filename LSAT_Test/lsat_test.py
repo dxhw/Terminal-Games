@@ -33,8 +33,8 @@ def welcome_screen(stdscr):
     num_options = 4 # increase if adding more options
     stdscr.addstr(option_start_line, 0, "1. Logical Reasoning Mode")
     stdscr.addstr(option_start_line + 1, 0, "2. Reading Comphrension Mode")
-    stdscr.addstr(option_start_line + 2, 0, "1. Time Strict Logical Reasoning Mode")
-    stdscr.addstr(option_start_line + 3, 0, "2. Time Strict Reading Comphrension Mode")
+    stdscr.addstr(option_start_line + 2, 0, "3. Time Strict Logical Reasoning Mode")
+    stdscr.addstr(option_start_line + 3, 0, "4. Time Strict Reading Comphrension Mode")
     #add new options here
 
     current_row = option_start_line
