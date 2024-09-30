@@ -4,12 +4,15 @@ import curses
 import json
 import random
 import time
+from math import ceil, floor
 
 QUESTION_PATH = "LSAT_DATA/"
 LR_PATH = QUESTION_PATH + "all_lr.json"
 RC_PATH = QUESTION_PATH + "all_rc.json"
+LR_QUESTION_NUMBER = 26
 
 TIME_LIMIT = 20000 #80
+IS_TEST = False
 
 # TODO:
 # Allow for proper turning off of time limit
@@ -30,11 +33,12 @@ def welcome_screen(stdscr):
     arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter to start.")
     num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
     option_start_line = num_line + 1
-    num_options = 4 # increase if adding more options
+    num_options = 5 # increase if adding more options
     stdscr.addstr(option_start_line, 0, "1. Logical Reasoning Mode")
     stdscr.addstr(option_start_line + 1, 0, "2. Reading Comphrension Mode")
     stdscr.addstr(option_start_line + 2, 0, "3. Time Strict Logical Reasoning Mode")
     stdscr.addstr(option_start_line + 3, 0, "4. Time Strict Reading Comphrension Mode")
+    stdscr.addstr(option_start_line + 4, 0, "5. LR Test Mode")
     #add new options here
 
     current_row = option_start_line
@@ -63,8 +67,10 @@ def welcome_screen(stdscr):
             chosen_option = 1
         elif key == 51: # 3
             chosen_option = 2
-        elif key == 52: # 2
+        elif key == 52: # 4
             chosen_option = 3
+        elif key == 53: #5
+            chosen_option = 4
         # add here for new options
 
         stdscr.refresh()
@@ -80,6 +86,11 @@ def welcome_screen(stdscr):
         case 3:
             TIME_LIMIT = 480 # 8 minutes
             return "RC"
+        case 4:
+            global IS_TEST
+            IS_TEST = True
+            return "LR"
+
         
         # add new options here
     
@@ -190,7 +201,7 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
             if reveal and idx == incorrect:
                 color_num = 2
             
-            option_row = a_line_num + 1 + 2 * idx
+            option_row = a_line_num + 1 + 3 * idx
             option_text = f"{idx + 1}. {answers[idx]}"
             if idx == current_row - (a_line_num + 1):
                 stdscr.attron(curses.A_REVERSE)
@@ -381,6 +392,10 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
         elapsed_time = 0
     return selected_answers, [q_data["label"] for q_data in questions], end, elapsed_time
 
+def full_review_lr(stdscr, answer_data):
+    for question_data, incorrect, time_taken in answer_data:
+        display_question_lr(stdscr, question_data, True, incorrect, time_taken)
+
 # Main function to run the test
 def main(stdscr, questions, test_type):
     random.shuffle(questions)
@@ -388,6 +403,8 @@ def main(stdscr, questions, test_type):
     wrong_questions = []
     completed_questions = 0
 
+    full_review = []
+    total_time = 0
     for question_data in questions:
         if test_type == "LR":
             selected_answer, correct_answer, escaped, time_taken = display_question_lr(stdscr, question_data)
@@ -399,16 +416,29 @@ def main(stdscr, questions, test_type):
             else:
                 wrong_questions.append(question_data["id_string"])
 
-            height, _ = stdscr.getmaxyx()
-            wrapping_text(stdscr, height - 3, f"{'Correct!' if selected_answer == correct_answer else 'Wrong!'} Press 'r' to review, 'esc' to end the test, and any other key to continue.")
+            incorrect = selected_answer if selected_answer != correct_answer else None
             completed_questions += 1
-            stdscr.nodelay(False)
-            key = stdscr.getch()
-            if key == ord('r'):
-                incorrect = selected_answer if selected_answer != correct_answer else None
-                display_question_lr(stdscr, question_data, True, incorrect, time_taken)
-            if key == '\x1b': # escape
-                break
+            
+
+            full_review.append((question_data, incorrect, time_taken))
+            total_time += time_taken
+
+            if IS_TEST:
+                if completed_questions == LR_QUESTION_NUMBER:
+                    break
+                stdscr.nodelay(False)
+                key = stdscr.getch()
+                if key == '\x1b': # escape
+                    break
+            else:
+                height, _ = stdscr.getmaxyx()
+                wrapping_text(stdscr, height - 3, f"{'Correct!' if selected_answer == correct_answer else 'Wrong!'} Press 'r' to review, 'esc' to end the test, and any other key to continue.")
+                stdscr.nodelay(False)
+                key = stdscr.getch()
+                if key == ord('r'):
+                    display_question_lr(stdscr, question_data, True, incorrect, time_taken)
+                if key == '\x1b': # escape
+                    break
         else:
             num_correct = 0
             incorrect = []
@@ -438,12 +468,20 @@ def main(stdscr, questions, test_type):
 
     while True:
         stdscr.erase()
-        stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{completed_questions}")
-        stdscr.addstr(2, 0, "Press 'esc' to exit.")
-        stdscr.addstr(3, 0, "Incorrect questions:")
-        wrapping_text(stdscr, 4, f"{' '.join(wrong_questions)}")
+        stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{completed_questions}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60}")
+        if IS_TEST:
+            stdscr.addstr(1, 0, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
+        stdscr.addstr(3, 0, "Press 'esc' to exit.")
+        stdscr.addstr(4, 0, "Press 'r' for full review")
+        stdscr.addstr(5, 0, "Incorrect questions:")
+        wrapping_text(stdscr, 6, f"{' '.join(wrong_questions)}")
         stdscr.refresh()
         key = stdscr.getch()
+        if key == ord('r'):
+            if test_type == "LR":
+                full_review_lr(stdscr, full_review)
+            else:
+                pass #implement test mode RC
         if key == ord('\x1b'):
             break
 
