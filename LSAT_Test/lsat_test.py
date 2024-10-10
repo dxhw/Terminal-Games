@@ -13,6 +13,7 @@ LR_QUESTION_NUMBER = 26
 
 TIME_LIMIT = 20000 #80
 IS_TEST = False
+HIDE_TIMER = False
 
 # TODO:
 # Allow for proper turning off of time limit
@@ -43,8 +44,10 @@ def welcome_screen(stdscr):
 
     current_row = option_start_line
     chosen_option = -1
+    global HIDE_TIMER
     
     while chosen_option == -1:
+        stdscr.addstr(stdscr.getmaxyx()[0] - 3, 0, "Hide Timer? (press 'h') " + str(HIDE_TIMER) + "  ")
         for i in range(option_start_line, option_start_line + num_options):
             if i == current_row:
                 stdscr.attron(curses.A_REVERSE)
@@ -54,8 +57,9 @@ def welcome_screen(stdscr):
                 stdscr.addstr(i, 0, stdscr.instr(i, 0).decode('utf-8').strip())
         
         key = stdscr.getch()
-        
-        if key == curses.KEY_UP and current_row > option_start_line:
+        if key == ord('h'):
+            HIDE_TIMER = not(HIDE_TIMER)
+        elif key == curses.KEY_UP and current_row > option_start_line:
             current_row -= 1
         elif key == curses.KEY_DOWN and current_row < option_start_line + num_options - 1:
             current_row += 1
@@ -161,7 +165,8 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
             if remaining_time == 0:
                 chosen_option = None
                 break
-            stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds")
+            if not(HIDE_TIMER):
+                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
@@ -272,7 +277,8 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
             remaining_time = max(0, TIME_LIMIT - elapsed_time)
             if remaining_time == 0:
                 break
-            stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds")
+            if not(HIDE_TIMER):
+                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 480 else red_text
