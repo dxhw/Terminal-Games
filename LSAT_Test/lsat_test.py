@@ -35,13 +35,16 @@ def welcome_screen(stdscr):
     arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter to start.")
     num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
     option_start_line = num_line + 1
-    num_options = 6 # increase if adding more options
+    num_options = 8 # increase if adding more options
     stdscr.addstr(option_start_line, 0, "1. Logical Reasoning Mode")
     stdscr.addstr(option_start_line + 1, 0, "2. Reading Comphrension Mode")
     stdscr.addstr(option_start_line + 2, 0, "3. Time Strict Logical Reasoning Mode")
     stdscr.addstr(option_start_line + 3, 0, "4. Time Strict Reading Comphrension Mode")
     stdscr.addstr(option_start_line + 4, 0, "5. LR Test Mode")
     stdscr.addstr(option_start_line + 5, 0, "6. RC Test Mode")
+    stdscr.addstr(option_start_line + 6, 0, "7. No Time Limit LR Test Mode")
+    stdscr.addstr(option_start_line + 7, 0, "8. No Time Limit RC Test Mode")
+    # stdscr.addstr(option_start_line + 6, 0, "7. Full Test Mode")
     #add new options here
 
     current_row = option_start_line
@@ -79,6 +82,10 @@ def welcome_screen(stdscr):
             chosen_option = 4
         elif key == 54: #6
             chosen_option = 5
+        elif key == 55: #7
+            chosen_option = 6
+        elif key == 56: #8
+            chosen_option = 7
         # add here for new options
 
         stdscr.refresh()
@@ -97,10 +104,21 @@ def welcome_screen(stdscr):
             return "RC"
         case 4:
             IS_TEST = True
+            TIME_LIMIT = 35 * 60 # 35 minutes
             return "LR"
         case 5:
             IS_TEST = True
+            TIME_LIMIT = 35 * 60 # 35 minutes
             return "RC"
+        case 6:
+            IS_TEST = True
+            return "LR"
+        case 7:
+            IS_TEST = True
+            return "RC"
+        # case 6:
+        #     IS_TEST = True
+        #     return "FULL"
         
         # add new options here
     
@@ -144,7 +162,7 @@ def wrapping_text(stdscr, start_y, target, color=None):
     return y_num + 1 # returns the next line to print on
 
 # Function to display a question using curses
-def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_taken=None):
+def display_question_lr(stdscr, question_data, cummulative_time=0, question_number=0, num_questions=LR_QUESTION_NUMBER, reveal=False, incorrect=-1, time_taken=None):
     curses.start_color()
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -154,7 +172,7 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
     red_text = curses.color_pair(2)
     current_row = None
     end = False
-    start_time = time.time()
+    start_time = time.time() - cummulative_time
     stdscr.nodelay(True) 
     elapsed_time = None
 
@@ -172,13 +190,15 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
                 chosen_option = None
                 break
             if not(HIDE_TIMER):
-                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds")
+                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
                 stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
 
-        stdscr.addstr(1, 0, "Context:")
+        if (IS_TEST or reveal) and (question_number != None):
+            stdscr.addstr(1, 0, f"Questions Completed: {question_number} / {num_questions}")
+        stdscr.addstr(2, 0, "Context:")
         while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
             try:
                 stdscr.addstr(0, 0, "Screen too small (c)")
@@ -257,9 +277,9 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
             break
     if not elapsed_time:
         elapsed_time = 0
-    return chosen_option, correct_answer, end, elapsed_time
+    return chosen_option, correct_answer, end, elapsed_time - cummulative_time
 
-def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_list=None, time_taken=None):
+def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None):
     curses.start_color()
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -273,7 +293,7 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
     questions = question_data_list["questions"]
     context = question_data_list["context"]
     selected_answers = [None] * len(questions)
-    start_time = time.time()
+    start_time = time.time() - cummulative_time
     stdscr.nodelay(True)
     elapsed_time = None
     end = False
@@ -289,7 +309,7 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
             if remaining_time == 0:
                 break
             if not(HIDE_TIMER):
-                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds")
+                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 480 else red_text
@@ -412,15 +432,23 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
 
     if not elapsed_time:
         elapsed_time = 0
-    return selected_answers, [q_data["label"] for q_data in questions], end, elapsed_time
+    return selected_answers, [q_data["label"] for q_data in questions], end, elapsed_time + cummulative_time
 
 def full_review_lr(stdscr, answer_data):
-    for question_data, incorrect, time_taken in answer_data:
-        display_question_lr(stdscr, question_data, True, incorrect, time_taken)
+    for i in range(len(answer_data)):
+        question_data, incorrect, time_taken = answer_data[i]
+        display_question_lr(stdscr, question_data, 0, i + 1, len(answer_data), True, incorrect, time_taken)
 
 def full_review_rc(stdscr, answer_data):
     for question_data_list, incorrect_list, time_taken in answer_data:
-        display_questions_rc(stdscr, question_data_list, True, incorrect_list, time_taken)
+        display_questions_rc(stdscr, question_data_list, 0, True, incorrect_list, time_taken)
+
+# def full_test(stdscr, questions, LR_section_count, RC_section_count):
+#     random.shuffle(questions[0])
+#     random.shuffle(questions[1])
+#     section_list = (["LR"] * LR_section_count) + (["RC"] * RC_section_count)
+#     random.shuffle(section_list)
+    
 
 # Main function to run the test
 def main(stdscr, questions, test_type):
@@ -433,8 +461,12 @@ def main(stdscr, questions, test_type):
     full_review = []
     total_time = 0
     for question_data in questions:
+        if IS_TEST:
+            full_test_time = total_time
+        else:
+            full_test_time = 0
         if test_type == "LR":
-            selected_answer, correct_answer, escaped, time_taken = display_question_lr(stdscr, question_data)
+            selected_answer, correct_answer, escaped, time_taken = display_question_lr(stdscr, question_data, full_test_time, completed_questions + 1)
             if escaped:
                 break
 
@@ -463,13 +495,19 @@ def main(stdscr, questions, test_type):
                 stdscr.nodelay(False)
                 key = stdscr.getch()
                 if key == ord('r'):
-                    display_question_lr(stdscr, question_data, True, incorrect, time_taken)
+                    display_question_lr(stdscr, question_data, 0, None, None, True, incorrect, time_taken)
                 if key == '\x1b': # escape
                     break
         else: # RC mode
             num_correct = 0
             incorrect = []
-            selected_answers, correct_answers, escaped, time_taken = display_questions_rc(stdscr, question_data)
+
+            if IS_TEST:
+                full_test_time = total_time
+            else:
+                full_test_time = 0
+
+            selected_answers, correct_answers, escaped, time_taken = display_questions_rc(stdscr, question_data, full_test_time)
             if escaped:
                 break
 
@@ -502,7 +540,7 @@ def main(stdscr, questions, test_type):
                 stdscr.nodelay(False)
                 key = stdscr.getch()
                 if key == ord('r'):
-                    display_questions_rc(stdscr, question_data, True, incorrect, time_taken)
+                    display_questions_rc(stdscr, question_data, 0, True, incorrect, time_taken)
                 if key == '\x1b': # escape
                     break
 
@@ -531,9 +569,19 @@ if __name__ == "__main__":
         test_type = curses.wrapper(welcome_screen)
         if test_type == "LR":
             questions = load_questions(LR_PATH)
+            curses.wrapper(main, questions, test_type)
         elif test_type == "RC":
             questions = load_questions(RC_PATH)
-        curses.wrapper(main, questions, test_type)
+            curses.wrapper(main, questions, test_type)
+#         elif test_type == "FULL":
+#             questions = (load_questions(LR_PATH), load_questions(RC_PATH))
+#             LR_section_count = 2
+#             RC_section_count = 1
+#             if random.randint(0, 1) == 0:
+#                 LR_section_count += 1
+#             else: 
+#                 RC_section_count += 1
+#             curses.wrapper(full_test, questions, LR_section_count, RC_section_count)
         print("Test exited")
     except KeyboardInterrupt:
         print("Test exited")
