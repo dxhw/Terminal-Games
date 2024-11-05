@@ -177,12 +177,16 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
                 stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
+
         stdscr.addstr(1, 0, "Context:")
         while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
             try:
                 stdscr.addstr(0, 0, "Screen too small (c)")
             except:
                 pass
+            stdscr.refresh()
+            continue
+
         try:
             stdscr.addstr(c_line_num + 1, 0, "Question:")
         except:
@@ -193,12 +197,13 @@ def display_question_lr(stdscr, question_data, reveal=False, incorrect=-1, time_
                 stdscr.addstr(0, 0, "Screen too small (q)")
             except:
                 pass
-        
-        if q_line_num != -1:
-            try:
-                stdscr.addstr(q_line_num + 1, 0, "Choose an answer (1-5) using either the number or arrow keys: ")
-            except:
-                pass
+            stdscr.refresh()
+            continue
+
+        try:
+            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (1-5) using either the number or arrow keys: ")
+        except:
+            pass
 
         a_line_num = q_line_num + 1
         num_options = len(answers)
@@ -290,11 +295,15 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
                 time_color = green_text if time_taken < 480 else red_text
                 stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
         stdscr.addstr(1, 0, "Context:")
+
         while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
             try:
                 stdscr.addstr(0, 0, "Screen too small (c)")
             except:
                 pass
+            stdscr.refresh()
+            continue
+
         question_start_line = c_line_num + 1
         num_options = 5
 
@@ -313,19 +322,20 @@ def display_questions_rc(stdscr, question_data_list, reveal=False, incorrect_lis
             if reveal:
                 stdscr.addstr(question_start_line + 1, reveal_x, f"{'Incorrect' if incorrect != -1 else 'Correct!'}", red_text if incorrect != -1 else green_text)
         except:
-            pass
+            continue
 
         while (q_line_num := wrapping_text(stdscr, question_start_line + 2, question)) == -1:
             try:
                 stdscr.addstr(0, 0, "Screen too small (q)")
             except:
                 pass
+            stdscr.refresh()
+            continue
 
-        if q_line_num != -1:
-            try:
-                stdscr.addstr(q_line_num + 1, 0, "Choose an answer (use UP/DOWN arrow keys and Enter to select): ")
-            except:
-                pass
+        try:
+            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (use UP/DOWN arrow keys and Enter to select): ")
+        except:
+            pass
 
         a_line_num = q_line_num + 1
         if current_row is None:
@@ -456,7 +466,7 @@ def main(stdscr, questions, test_type):
                     display_question_lr(stdscr, question_data, True, incorrect, time_taken)
                 if key == '\x1b': # escape
                     break
-        else:
+        else: # RC mode
             num_correct = 0
             incorrect = []
             selected_answers, correct_answers, escaped, time_taken = display_questions_rc(stdscr, question_data)
