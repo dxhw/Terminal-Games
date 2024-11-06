@@ -197,7 +197,9 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
                 stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
 
         if (IS_TEST or reveal) and (question_number != None):
-            stdscr.addstr(1, 0, f"Questions Completed: {question_number} / {num_questions}")
+            stdscr.addstr(1, 0, f"Question Number: {question_number} / {num_questions}")
+        elif question_number != None:
+            stdscr.addstr(1, 0, f"Question Number: {question_number}")
         stdscr.addstr(2, 0, "Context:")
         while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
             try:
