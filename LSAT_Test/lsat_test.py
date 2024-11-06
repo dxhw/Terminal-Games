@@ -548,7 +548,7 @@ def main(stdscr, questions, test_type):
 
     while True:
         stdscr.erase()
-        stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{completed_questions}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60}")
+        stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{completed_questions}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
         if IS_TEST:
             stdscr.addstr(1, 0, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
         stdscr.addstr(3, 0, "Press 'esc' to exit.")
