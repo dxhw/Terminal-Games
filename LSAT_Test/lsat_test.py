@@ -18,16 +18,41 @@ HIDE_TIMER = False
 
 # TODO:
 # Allow for proper turning off of time limit
-# Add time-attack mode (see how many questions you can answer in X amount of time)
-# add realistic test mode
-# Put correct/incorrect thing on the main page
-# Fig bug with scrolling down in menu
+# Fix bug with scrolling down in menu
 
 # Function to load questions from a JSON file
-def load_questions(filename):
+def load_questions(test_type):
+    if test_type == "LR":
+        filename = LR_PATH
+    else:
+        filename = RC_PATH
     with open(filename, 'r') as file:
-        return json.load(file)
-    
+        questions = json.load(file)
+        if IS_TEST:
+            questions = get_test_questions(questions, test_type)
+        else:
+            random.shuffle(questions)
+        return questions
+
+# gets the set of questions from an actual test
+def get_test_questions(questions, test_type):
+    index = random.randint(0, len(questions) - 2)
+    if test_type == "LR":
+        first_question = index
+        while questions[first_question]["id_string"][-2:] != "_1":
+            first_question -= 1
+        last_question = index
+        while questions[last_question]["id_string"][-2:] != "_1":
+            last_question += 1
+    else:
+        first_question = index
+        # find first question for first passage
+        while questions[first_question]["context_id"][-2:] != "_1":
+            first_question -= 1
+        # there are always exactly 4 reading passages in the section
+        last_question = first_question + 4
+    return questions[first_question:last_question]
+
 def welcome_screen(stdscr):
     curses.curs_set(0)
     stdscr.clear()
@@ -454,7 +479,6 @@ def full_review_rc(stdscr, answer_data):
 
 # Main function to run the test
 def main(stdscr, questions, test_type):
-    random.shuffle(questions)
     score = 0
     wrong_questions = []
     completed_questions = 0
@@ -569,12 +593,8 @@ def main(stdscr, questions, test_type):
 if __name__ == "__main__":
     try:
         test_type = curses.wrapper(welcome_screen)
-        if test_type == "LR":
-            questions = load_questions(LR_PATH)
-            curses.wrapper(main, questions, test_type)
-        elif test_type == "RC":
-            questions = load_questions(RC_PATH)
-            curses.wrapper(main, questions, test_type)
+        questions = load_questions(test_type)
+        curses.wrapper(main, questions, test_type)
 #         elif test_type == "FULL":
 #             questions = (load_questions(LR_PATH), load_questions(RC_PATH))
 #             LR_section_count = 2
