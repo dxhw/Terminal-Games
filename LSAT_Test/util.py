@@ -13,7 +13,11 @@ def load_full_test_questions():
     if random.randint(0, 1) == 0:
         passage_types[0] = "RC" # 50% chance to have 2 RC passages
     random.shuffle(passage_types)
-    return [load_questions(passage_type, True) for passage_type in passage_types]
+    questions = [load_questions(passage_type, True) for passage_type in passage_types]
+    if any(not section for section in questions):
+        # try again, one of the sections was empty for some reason
+        return load_full_test_questions()
+    return questions
 
 def load_questions(test_type, is_test):
     if test_type == "FULL":
@@ -47,23 +51,27 @@ def restructure_rc_questions(data):
 
 # gets the set of questions from an actual test
 def get_test_questions(questions, test_type):
-    index = random.randint(0, len(questions) - 2)
-    if test_type == "LR":
-        first_question = index
-        while questions[first_question]["id_string"][-2:] != "_1":
-            first_question -= 1
-        last_question = index
-        while questions[last_question]["id_string"][-2:] != "_1":
-            last_question += 1
-        return questions[first_question:last_question]
-    else:
-        first_question = index
-        # find first question for first passage
-        while questions[first_question]["context_id"][-2:] != "_1":
-            first_question -= 1
-        # there are always exactly 4 reading passages in the section
-        last_question = first_question + 4
-        return restructure_rc_questions(questions[first_question:last_question])
+    try:
+        index = random.randint(0, len(questions) - 2)
+        if test_type == "LR":
+            first_question = index
+            while questions[first_question]["id_string"][-2:] != "_1":
+                first_question -= 1
+            last_question = index
+            while questions[last_question]["id_string"][-2:] != "_1":
+                last_question += 1
+            return questions[first_question:last_question]
+        else:
+            first_question = index
+            # find first question for first passage
+            while questions[first_question]["context_id"][-2:] != "_1":
+                first_question -= 1
+            # there are always exactly 4 reading passages in the section
+            last_question = first_question + 4
+            return restructure_rc_questions(questions[first_question:last_question])
+    except(IndexError):
+        # if there's an index error (maybe hit the end of the questions json), just try again
+        return get_test_questions(questions, test_type)
 
 ################
 
