@@ -7,6 +7,7 @@ from math import ceil, floor
 
 TIME_LIMIT = 20000 # default
 NO_ANSWER_GIVEN = 10
+FULL_INTERMISSION_TIME = 60 * 10 # 10 minutes
 
 # Function to display a question using curses
 def display_section_questions(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None, hide_timer=False):
@@ -262,6 +263,7 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
                 break
     else:
         reveal_score = False
+        intermission_start_time = time.time()
         while True:
             stdscr.erase()
             try:
@@ -275,6 +277,12 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
                 if reveal_score:
                     stdscr.addstr(4, 0, f"Your score: {score}/{len(questions)}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
                     stdscr.addstr(5, 0, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
+                if section_number == 1:
+                    intermission_time_lapsed = time.time() - intermission_start_time
+                    intermission_time_remaining = ceil(FULL_INTERMISSION_TIME - intermission_time_lapsed)
+                    intermission_mins, intermission_secs = floor(intermission_time_remaining / 60), intermission_time_remaining - floor(intermission_time_remaining / 60) * 60
+                    i = wrapping_text(stdscr, 6, f"If you are timing the test formally, you may now take a 10 minute intermission.")
+                    wrapping_text(stdscr, i, f"Remaining time: {intermission_time_remaining} seconds or {intermission_mins} minutes and {intermission_secs} seconds")
             except:
                 pass
             stdscr.refresh()
