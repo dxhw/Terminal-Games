@@ -11,8 +11,10 @@ from non_test import run_section_non_test
 
 # Fix bug with scrolling down in menu (not welcome screen, but question options)
 
-# make full test pull literally a valid full test instead of valid set of sections?
-# (This may be very hard to do based on how data is structured)
+# Note: full test does not and cannot pull a full set of 4 sections that were offered together
+# the data is too old to have the new format (so it would only be 3 sections) and is also
+# badly structured for that. I do not believe the sections within a test differ in difficulty, etc.
+# so this should not be a problem for practicing purposes
 
 def welcome_screen(stdscr):
     curses.curs_set(0)
@@ -116,7 +118,7 @@ if __name__ == "__main__":
         elif is_test:
             curses.wrapper(run_section_test, questions, time_limit, hide_timer)
         else:
-            curses.wrapper(run_section_non_test, questions, test_type, time_limit, hide_timer, is_test)
+            curses.wrapper(run_section_non_test, questions, test_type, time_limit, hide_timer)
         print("Test exited")
     except KeyboardInterrupt:
         print("Test exited")

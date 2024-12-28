@@ -293,15 +293,8 @@ def full_review_rc(stdscr, answer_data):
     for question_data_list, incorrect_list, time_taken in answer_data:
         display_questions_rc(stdscr, question_data_list, 0, True, incorrect_list, time_taken)
 
-# def full_test(stdscr, questions, LR_section_count, RC_section_count):
-#     random.shuffle(questions[0])
-#     random.shuffle(questions[1])
-#     section_list = (["LR"] * LR_section_count) + (["RC"] * RC_section_count)
-#     random.shuffle(section_list)
-    
-
 # Main function to run the test
-def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer, is_test=False):
+def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer):
     global TIME_LIMIT 
     TIME_LIMIT = time_limit
     score = 0
@@ -312,10 +305,7 @@ def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer, i
     full_review = []
     total_time = 0
     for question_data in questions:
-        if is_test:
-            full_test_time = total_time
-        else:
-            full_test_time = 0
+        full_test_time = 0
         if test_type == "LR":
             selected_answer, correct_answer, escaped, time_taken = display_question_lr(stdscr, question_data, full_test_time, completed_questions + 1, hide_timer)
             if escaped:
@@ -345,10 +335,7 @@ def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer, i
             num_correct = 0
             incorrect = []
 
-            if is_test:
-                full_test_time = total_time
-            else:
-                full_test_time = 0
+            full_test_time = 0
 
             selected_answers, correct_answers, escaped, time_taken = display_questions_rc(stdscr, question_data, full_test_time, hide_timer=hide_timer)
             if escaped:
@@ -370,27 +357,17 @@ def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer, i
             total_time += time_taken
             completed_questions += len(correct_answers)
             
-            if is_test:
-                if completed_passages == RC_PASSAGE_NUMBER:
-                    break
-                stdscr.nodelay(False)
-                key = stdscr.getch()
-                if key == '\x1b': # escape
-                    break
-            else:
-                height, _ = stdscr.getmaxyx()
-                wrapping_text(stdscr, height - 3, f"{num_correct}/{len(correct_answers)} Correct! Press 'r' to review, 'esc' to end the test, and any other key to continue.")
-                stdscr.nodelay(False)
-                key = stdscr.getch()
-                if key == ord('r'):
-                    display_questions_rc(stdscr, question_data, 0, True, incorrect, time_taken)
-                elif key == '\x1b': # escape
-                    break
+            height, _ = stdscr.getmaxyx()
+            wrapping_text(stdscr, height - 3, f"{num_correct}/{len(correct_answers)} Correct! Press 'r' to review, 'esc' to end the test, and any other key to continue.")
+            stdscr.nodelay(False)
+            key = stdscr.getch()
+            if key == ord('r'):
+                display_questions_rc(stdscr, question_data, 0, True, incorrect, time_taken)
+            elif key == '\x1b': # escape
+                break
     while True:
         stdscr.erase()
         stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{completed_questions}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
-        if is_test:
-            stdscr.addstr(1, 0, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
         stdscr.addstr(3, 0, "Press 'esc' to exit.")
         stdscr.addstr(4, 0, "Press 'r' for full review")
         stdscr.addstr(5, 0, "Incorrect questions:")
