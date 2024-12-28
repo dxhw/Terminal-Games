@@ -2,12 +2,17 @@
 
 import curses
 from util import load_questions, wrapping_text
-from full_test import run_test
-from non_test import run_non_test
+from full_test import run_section_test, full_test
+from non_test import run_section_non_test
 
 # TODO:
-# Allow for proper turning off of time limit
-# Fix bug with scrolling down in menu
+# Allow for proper turning off of time limit, consider hiding timer by default for no time limit modes
+# I personally do not like this for the base LR/RC modes, but maybe the test modes?
+
+# Fix bug with scrolling down in menu (not welcome screen, but question options)
+
+# make full test pull literally a valid full test instead of valid set of sections?
+# (This may be very hard to do based on how data is structured)
 
 def welcome_screen(stdscr):
     curses.curs_set(0)
@@ -16,16 +21,17 @@ def welcome_screen(stdscr):
     arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter to start.")
     num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
     option_start_line = num_line + 1
-    num_options = 8 # increase if adding more options
+    num_options = 10 # increase if adding more options
     stdscr.addstr(option_start_line, 0, "1. Logical Reasoning Mode")
     stdscr.addstr(option_start_line + 1, 0, "2. Reading Comphrension Mode")
-    stdscr.addstr(option_start_line + 2, 0, "3. Time Strict Logical Reasoning Mode")
-    stdscr.addstr(option_start_line + 3, 0, "4. Time Strict Reading Comphrension Mode")
+    stdscr.addstr(option_start_line + 2, 0, "3. Time Strict Logical Reasoning Mode (80s per Q)")
+    stdscr.addstr(option_start_line + 3, 0, "4. Time Strict Reading Comphrension Mode (8 min per passage)")
     stdscr.addstr(option_start_line + 4, 0, "5. LR Test Mode")
     stdscr.addstr(option_start_line + 5, 0, "6. RC Test Mode")
     stdscr.addstr(option_start_line + 6, 0, "7. No Time Limit LR Test Mode")
     stdscr.addstr(option_start_line + 7, 0, "8. No Time Limit RC Test Mode")
-    # stdscr.addstr(option_start_line + 6, 0, "7. Full Test Mode")
+    stdscr.addstr(option_start_line + 8, 0, "9. Full Test Mode")
+    stdscr.addstr(option_start_line + 9, 0, "0. No Time Limit Full Test Mode")
     #add new options here
 
     current_row = option_start_line
@@ -67,6 +73,10 @@ def welcome_screen(stdscr):
             chosen_option = 6
         elif key == 56: #8
             chosen_option = 7
+        elif key == 57: #9
+            chosen_option = 8
+        elif key == 48: #0
+            chosen_option = 9
         # add here for new options
 
         stdscr.refresh()
@@ -90,10 +100,10 @@ def welcome_screen(stdscr):
             return "LR", is_test, default_time_limit, hide_timer
         case 7:
             return "RC", is_test, default_time_limit, hide_timer
-        # case 6:
-        #     is_test = True
-        #     return "FULL"
-        
+        case 8:
+            return "FULL", is_test, 35 * 60, hide_timer
+        case 9:
+            return "FULL", is_test, default_time_limit, hide_timer
         # add new options here
 
 # Entry point
@@ -101,20 +111,12 @@ if __name__ == "__main__":
     try:
         test_type, is_test, time_limit, hide_timer = curses.wrapper(welcome_screen)
         questions = load_questions(test_type, is_test)
-        if is_test and test_type == "LR":
-        # should just be if is_test once test mode RC is finished (in full_test.py)
-            curses.wrapper(run_test, questions, test_type, time_limit, hide_timer)
+        if test_type == "FULL":
+            curses.wrapper(full_test, questions, time_limit, hide_timer)
+        elif is_test:
+            curses.wrapper(run_section_test, questions, time_limit, hide_timer)
         else:
-            curses.wrapper(run_non_test, questions, test_type, time_limit, hide_timer, is_test)
-#         elif test_type == "FULL":
-#             questions = (load_questions(LR_PATH), load_questions(RC_PATH))
-#             LR_section_count = 2
-#             RC_section_count = 1
-#             if random.randint(0, 1) == 0:
-#                 LR_section_count += 1
-#             else: 
-#                 RC_section_count += 1
-#             curses.wrapper(full_test, questions, LR_section_count, RC_section_count)
+            curses.wrapper(run_section_non_test, questions, test_type, time_limit, hide_timer, is_test)
         print("Test exited")
     except KeyboardInterrupt:
         print("Test exited")

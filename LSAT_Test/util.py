@@ -8,8 +8,17 @@ LR_PATH = QUESTION_PATH + "all_lr.json"
 RC_PATH = QUESTION_PATH + "all_rc.json"
 
 ##### Utils for loading questions #######
+def load_full_test_questions():
+    passage_types = ["LR", "LR", "RC", "LR"] # 0 == LR, 1 == RC
+    if random.randint(0, 1) == 0:
+        passage_types[0] = "RC" # 50% chance to have 2 RC passages
+    random.shuffle(passage_types)
+    return [load_questions(passage_type, True) for passage_type in passage_types]
+
 def load_questions(test_type, is_test):
-    if test_type == "LR":
+    if test_type == "FULL":
+        return load_full_test_questions()
+    elif test_type == "LR":
         filename = LR_PATH
     else:
         filename = RC_PATH
@@ -20,6 +29,21 @@ def load_questions(test_type, is_test):
         else:
             random.shuffle(questions)
         return questions
+    
+# modify the structure of rc questions so that context is included separately with each question
+# instead of being at a higher level
+# effectively, this makes rc questions formatted the same way that LR questions are
+def restructure_rc_questions(data):
+    restructured_data = []
+    for item in data:
+        context = item["context"]
+        for question in item["questions"]:
+            question_with_context = {
+                "context": context,
+                **question
+            }
+            restructured_data.append(question_with_context)
+    return restructured_data
 
 # gets the set of questions from an actual test
 def get_test_questions(questions, test_type):
@@ -31,6 +55,7 @@ def get_test_questions(questions, test_type):
         last_question = index
         while questions[last_question]["id_string"][-2:] != "_1":
             last_question += 1
+        return questions[first_question:last_question]
     else:
         first_question = index
         # find first question for first passage
@@ -38,7 +63,7 @@ def get_test_questions(questions, test_type):
             first_question -= 1
         # there are always exactly 4 reading passages in the section
         last_question = first_question + 4
-    return questions[first_question:last_question]
+        return restructure_rc_questions(questions[first_question:last_question])
 
 ################
 

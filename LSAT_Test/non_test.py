@@ -301,7 +301,7 @@ def full_review_rc(stdscr, answer_data):
     
 
 # Main function to run the test
-def run_non_test(stdscr, questions, test_type, time_limit, hide_timer, is_test=False):
+def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer, is_test=False):
     global TIME_LIMIT 
     TIME_LIMIT = time_limit
     score = 0
@@ -402,5 +402,5 @@ def run_non_test(stdscr, questions, test_type, time_limit, hide_timer, is_test=F
                 full_review_lr(stdscr, full_review)
             else:
                 full_review_rc(stdscr, full_review)
-        if key == ord('\x1b'):
+        elif key == ord('\x1b'):
             break
