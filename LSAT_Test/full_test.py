@@ -10,7 +10,7 @@ NO_ANSWER_GIVEN = 10
 FULL_INTERMISSION_TIME = 60 * 10 # 10 minutes
 
 # Function to display a question using curses
-def display_section_questions(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None, hide_timer=False):
+def display_section_questions(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None, hide_timer=False, flagged=None):
     curses.start_color()
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -24,6 +24,8 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
     current_row = None
     num_questions = len(question_data_list)
     selected_answers = [None] * num_questions
+    if not flagged:
+        flagged = [False] * num_questions
 
     elapsed_time = None
     start_time = time.time() - cummulative_time
@@ -57,8 +59,13 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
         stdscr.addstr(1, 0, f"Question Number: {question_index + 1} / {num_questions}")
         if question_index + 1 == num_questions:
             stdscr.addstr(1, 28, "Last Question", red_text)
-        stdscr.addstr(2, 0, "Context:")
-        while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
+        try:
+            true_indices = ", ".join(str(index + 1) for index, flag in enumerate(flagged) if flag)
+            stdscr.addstr(2, 0, "flags: " + true_indices)
+        except:
+            pass
+        stdscr.addstr(3, 0, "Context:")
+        while (c_line_num := wrapping_text(stdscr, 3, context)) == -1:
             try:
                 stdscr.addstr(0, 0, "Screen too small (c)")
             except:
@@ -80,7 +87,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             continue
 
         try:
-            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (1-5) using either the number or arrow keys: ")
+            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (1-5) using either the number or UP/DOWN arrow keys and Enter. Press 'f' to flag/unflag a question: ")
         except:
             pass
 
@@ -149,6 +156,9 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             current_row = None
             if question_index != num_questions - 1:
                 question_index += 1
+        elif key == ord("f"):
+            # flag or unflag
+            flagged[question_index] = not(flagged[question_index])
         elif key == ord('\n'):
             selected_answers[question_index] = (current_row - (a_line_num + 1))
             just_changed = True
@@ -163,12 +173,12 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             break
     if not elapsed_time:
         elapsed_time = 0
-    return selected_answers, elapsed_time - cummulative_time
+    return selected_answers, elapsed_time - cummulative_time, flagged
 
-def section_review(stdscr, answer_data):
+def section_review(stdscr, answer_data, flagged):
     for i in range(len(answer_data)):
         question_data, incorrect = answer_data[i]
-        display_section_questions(stdscr, question_data, 0, True, incorrect, None)
+        display_section_questions(stdscr, question_data, 0, True, incorrect, None, flagged=flagged)
 
 def full_test_review(stdscr, section_results):
     wrong_questions = []
@@ -196,13 +206,13 @@ def full_test_review(stdscr, section_results):
         stdscr.refresh()
         key = stdscr.getch()
         if key == ord('1'):
-            section_review(stdscr, section_results[0]["review"])
+            section_review(stdscr, section_results[0]["review"], section_results[0]["flagged"])
         elif key == ord('2'):
-            section_review(stdscr, section_results[1]["review"])
+            section_review(stdscr, section_results[1]["review"], section_results[1]["flagged"])
         elif key == ord('3'):
-            section_review(stdscr, section_results[2]["review"]) 
+            section_review(stdscr, section_results[2]["review"], section_results[2]["flagged"]) 
         elif key == ord('4'):
-            section_review(stdscr, section_results[3]["review"])
+            section_review(stdscr, section_results[3]["review"], section_results[3]["flagged"])
         elif key == ord('\x1b'):
             break
 
@@ -227,7 +237,7 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
     total_time = 0
     while True:
         full_test_time = total_time
-        selected_answers, time_taken = display_section_questions(stdscr, questions, full_test_time, hide_timer=hide_timer)
+        selected_answers, time_taken, flagged = display_section_questions(stdscr, questions, full_test_time, hide_timer=hide_timer)
         
         for selected, question in zip(selected_answers, questions):
             if selected == None:
@@ -258,7 +268,7 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
             stdscr.refresh()
             key = stdscr.getch()
             if key == ord('r'):
-                section_review(stdscr, full_review)
+                section_review(stdscr, full_review, flagged)
             elif key == ord('\x1b'):
                 break
     else:
@@ -288,8 +298,8 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
             stdscr.refresh()
             key = stdscr.getch()
             if key == ord('r'):
-                section_review(stdscr, full_review)
+                section_review(stdscr, full_review, flagged)
             elif key == ord('s'):
                 reveal_score = True
             elif key == ord('n'):
-                return {"review": full_review, "score": score, "question_number": len(questions), "time": total_time, "incorrect_ids": wrong_questions}
+                return {"review": full_review, "score": score, "question_number": len(questions), "time": total_time, "incorrect_ids": wrong_questions, "flagged": flagged}
