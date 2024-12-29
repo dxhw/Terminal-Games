@@ -16,10 +16,6 @@ from non_test import run_section_non_test
 # need to consider how to make this easily accessible to people (do people know where on their
 # machine this program is stored? Probably shouldn't arbitrarily store on peoples' desktops etc.)
 
-# question flagging
-
-# decoy marking
-
 # Note: full test does not and cannot pull a full set of 4 sections that were offered together
 # the data is too old to have the new format (so it would only be 3 sections) and is also
 # badly structured for that. I do not believe the sections within a test differ in difficulty, etc.

@@ -26,6 +26,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
     selected_answers = [None] * num_questions
     if not flagged:
         flagged = [False] * num_questions
+    decoys = [set() for _ in range(num_questions)] # decoys are not maintained for reviewing
 
     elapsed_time = None
     start_time = time.time() - cummulative_time
@@ -87,7 +88,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             continue
 
         try:
-            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (1-5) using either the number or UP/DOWN arrow keys and Enter. Press 'f' to flag/unflag a question: ")
+            stdscr.addstr(q_line_num + 1, 0, "Use 1-5 or arrows to choose answer. 'f' to flag a question. 'x' to mark a decoy")
         except:
             pass
 
@@ -103,11 +104,11 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
         for idx in range(num_options):
             color_num = 0
             if idx == selected_answers[question_index]:
-                color_num = 3
+                color_num = 3 # yellow
             if reveal and idx == correct_answer:
-                color_num = 1
+                color_num = 1 # green
             if reveal and idx == incorrect:
-                color_num = 2
+                color_num = 2 # red
             
             option_row = a_line_num + 1 + 3 * idx
             option_text = f"{idx + 1}. {answers[idx]}"
@@ -117,6 +118,11 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
                     color_num += 3
                 wrapping_text(stdscr, option_row, option_text, curses.color_pair(color_num))
                 stdscr.attroff(curses.A_REVERSE)
+            elif idx in decoys[question_index]:
+                # dim marked decoys
+                stdscr.attron(curses.A_DIM)
+                wrapping_text(stdscr, option_row, option_text, curses.color_pair(color_num))
+                stdscr.attroff(curses.A_DIM)
             else:
                 wrapping_text(stdscr, option_row, option_text, curses.color_pair(color_num))
 
@@ -156,6 +162,13 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             current_row = None
             if question_index != num_questions - 1:
                 question_index += 1
+        elif key == ord('x'):
+            # mark decoys
+            chosen_row = current_row - (a_line_num + 1)
+            if chosen_row in decoys[question_index]:
+                decoys[question_index].remove(chosen_row)
+            else:
+                decoys[question_index].add(chosen_row)
         elif key == ord("f"):
             # flag or unflag
             flagged[question_index] = not(flagged[question_index])
