@@ -49,7 +49,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
                 break
             if not(hide_timer):
                 if TIME_LIMIT == DEFAULT_TIME_LIMIT:
-                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {floor(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
                 else:
                     wrapping_text(stdscr, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
