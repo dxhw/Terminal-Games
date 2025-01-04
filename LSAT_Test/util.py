@@ -58,7 +58,7 @@ def get_test_questions(questions, test_type):
             first_question = index
             while questions[first_question]["id_string"][-2:] != "_1":
                 first_question -= 1
-            last_question = index
+            last_question = first_question + 1
             while questions[last_question]["id_string"][-2:] != "_1":
                 last_question += 1
             return questions[first_question:last_question]
