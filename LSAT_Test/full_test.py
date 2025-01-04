@@ -49,41 +49,31 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
                 break
             if not(hide_timer):
                 if TIME_LIMIT == DEFAULT_TIME_LIMIT:
-                    stdscr.addstr(0, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
                 else:
-                    stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
-                stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
+                wrapping_text(stdscr, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
 
-        stdscr.addstr(1, 0, f"Question Number: {question_index + 1} / {num_questions}")
+        wrapping_text(stdscr, 1, f"Question Number: {question_index + 1} / {num_questions}")
         if question_index + 1 == num_questions:
-            stdscr.addstr(1, 28, "Last Question", red_text)
-        try:
-            true_indices = ", ".join(str(index + 1) for index, flag in enumerate(flagged) if flag)
-            stdscr.addstr(2, 0, "flags: " + true_indices)
-        except:
-            pass
-        stdscr.addstr(3, 0, "Context:")
+            wrapping_text(stdscr, 1, "Last Question", red_text, 28)
+        
+        true_indices = ", ".join(str(index + 1) for index, flag in enumerate(flagged) if flag)
+        wrapping_text(stdscr, 2, "flags: " + true_indices)
+
+        wrapping_text(stdscr, 3, "Context:")
         while (c_line_num := wrapping_text(stdscr, 3, context)) == -1:
-            try:
-                stdscr.addstr(0, 0, "Screen too small (c)")
-            except:
-                pass
+            wrapping_text(stdscr, 0, "Screen too small (c)", red_text)
             stdscr.refresh()
             continue
 
-        try:
-            stdscr.addstr(c_line_num + 1, 0, "Question:")
-        except:
-            pass
+        wrapping_text(stdscr, c_line_num + 1, "Question:")
         
         while (q_line_num := wrapping_text(stdscr, c_line_num + 2, question)) == -1:
-            try:
-                stdscr.addstr(0, 0, "Screen too small (q)")
-            except:
-                pass
+            wrapping_text(stdscr, 0, "Screen too small (q)", red_text)
             stdscr.refresh()
             continue
 
@@ -125,15 +115,9 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
 
         if reveal:
             if incorrect == NO_ANSWER_GIVEN:
-                try:
-                    stdscr.addstr(0, 0, "NO ANSWER GIVEN", red_text)
-                except:
-                    pass
+                wrapping_text(stdscr, 0, "NO ANSWER GIVEN", red_text)
             height, _ = stdscr.getmaxyx()
-            try:
-                stdscr.addstr(height - 1, 0, f"Press enter to continue, {sum(x == -1 for x in incorrect_list)}/{num_questions} Correct")
-            except:
-                pass
+            wrapping_text(stdscr, height - 1, f"Press enter to continue, {sum(x == -1 for x in incorrect_list)}/{num_questions} Correct")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -205,7 +189,7 @@ def full_test_review(stdscr, section_results):
     
     while True:
         stdscr.erase()
-        stdscr.addstr(0, 0, "Test completed!")
+        wrapping_text(stdscr, 0, "Test completed!")
         i = 1
 
         for section, sec_num in zip(section_results, [1, 2, 3, 4]):
@@ -277,12 +261,12 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
     if not is_full_test:
         while True:
             stdscr.erase()
-            stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{len(questions)}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
-            stdscr.addstr(1, 0, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
-            stdscr.addstr(3, 0, "Press 'esc' to exit.")
-            stdscr.addstr(4, 0, "Press 'r' for full review")
-            stdscr.addstr(5, 0, "Incorrect questions:")
-            wrapping_text(stdscr, 6, f"{' '.join(wrong_questions)}")
+            l = wrapping_text(stdscr, 0, f"Test completed! Your score: {score}/{len(questions)}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
+            l = wrapping_text(stdscr, l, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
+            l = wrapping_text(stdscr, l, "Press 'esc' to exit.")
+            l = wrapping_text(stdscr, l, "Press 'r' for full review")
+            l = wrapping_text(stdscr, l, "Incorrect questions:")
+            wrapping_text(stdscr, l, f"{' '.join(wrong_questions)}")
             stdscr.refresh()
             key = stdscr.getch()
             if key == ord('r'):
@@ -294,25 +278,20 @@ def run_section_test(stdscr, questions, time_limit, hide_timer, is_full_test=Fal
         intermission_start_time = time.time()
         while True:
             stdscr.erase()
-            try:
-                stdscr.addstr(0, 0, f"Section {section_number + 1} completed!")
-                if section_number == 3:
-                    stdscr.addstr(1, 0, "Press 'n' to move to see final test results")
-                else:
-                    stdscr.addstr(1, 0, "Press 'n' to move to the next section")  
-                stdscr.addstr(2, 0, "Press 'r' for section review")
-                stdscr.addstr(3, 0, "Press 's' to see score and time taken")
-                if reveal_score:
-                    stdscr.addstr(4, 0, f"Your score: {score}/{len(questions)}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
-                    stdscr.addstr(5, 0, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
-                if section_number == 1:
-                    intermission_time_lapsed = time.time() - intermission_start_time
-                    intermission_time_remaining = ceil(FULL_INTERMISSION_TIME - intermission_time_lapsed)
-                    intermission_mins, intermission_secs = floor(intermission_time_remaining / 60), intermission_time_remaining - floor(intermission_time_remaining / 60) * 60
-                    i = wrapping_text(stdscr, 6, f"If you are timing the test formally, you may now take a 10 minute intermission.")
-                    wrapping_text(stdscr, i, f"Remaining time: {intermission_time_remaining} seconds or {intermission_mins} minutes and {intermission_secs} seconds")
-            except:
-                pass
+            l = wrapping_text(stdscr, 0, f"Section {section_number + 1} completed!")
+            display_string = "Press 'n' to move to see final test results" if section_number == 3 else "Press 'n' to move to the next section"
+            l = wrapping_text(stdscr, l, display_string)
+            l = wrapping_text(stdscr, l, "Press 'r' for section review")
+            l = wrapping_text(stdscr, l, "Press 's' to see score and time taken")
+            if reveal_score:
+                l = wrapping_text(stdscr, l, f"Your score: {score}/{len(questions)}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
+                l = wrapping_text(stdscr, l, f"Note that the max time is {35 * 60} seconds or 35 minutes.")
+            if section_number == 1:
+                intermission_time_lapsed = time.time() - intermission_start_time
+                intermission_time_remaining = ceil(FULL_INTERMISSION_TIME - intermission_time_lapsed)
+                intermission_mins, intermission_secs = floor(intermission_time_remaining / 60), intermission_time_remaining - floor(intermission_time_remaining / 60) * 60
+                l = wrapping_text(stdscr, l + 2, f"If you are timing the test formally, you may now take a 10 minute intermission.")
+                wrapping_text(stdscr, l, f"Remaining time: {intermission_time_remaining} seconds or {intermission_mins} minutes and {intermission_secs} seconds")
             stdscr.refresh()
             key = stdscr.getch()
             if key == ord('r'):

@@ -87,9 +87,10 @@ def find_length_for_line_print(all_text, width) -> int:
             return -1
     return i + 1
 
-def wrapping_text(stdscr, start_y, target, color=None):
+def wrapping_text(stdscr, start_y, target, color=None, x_offset=0):
     _, width = stdscr.getmaxyx()
     width -= 3
+    width -= x_offset
     y_num = start_y
     to_print = target
     while (a := find_length_for_line_print(to_print, width)) != 0:
@@ -97,9 +98,9 @@ def wrapping_text(stdscr, start_y, target, color=None):
             return y_num
         try:
             if color:
-                stdscr.addstr(y_num, 0, to_print[:a], color)
+                stdscr.addstr(y_num, x_offset, to_print[:a], color)
             else:
-                stdscr.addstr(y_num, 0, to_print[:a])
+                stdscr.addstr(y_num, x_offset, to_print[:a])
         except:
             #screen too small
             return -1
@@ -109,9 +110,9 @@ def wrapping_text(stdscr, start_y, target, color=None):
     if to_print != '':
         try:
             if color:
-                stdscr.addstr(y_num, 0, to_print, color)
+                stdscr.addstr(y_num, x_offset, to_print, color)
             else:
-                stdscr.addstr(y_num, 0, to_print)
+                stdscr.addstr(y_num, x_offset, to_print)
         except:
             return -1
     return y_num + 1 # returns the next line to print on

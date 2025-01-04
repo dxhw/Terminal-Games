@@ -36,37 +36,28 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
                 break
             if not(hide_timer):
                 if TIME_LIMIT == DEFAULT_TIME_LIMIT:
-                    stdscr.addstr(0, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
                 else:
-                    stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
-                stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
+                wrapping_text(stdscr, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
 
         if reveal and (question_number != None):
-            stdscr.addstr(1, 0, f"Question Number: {question_number} / {num_questions}")
+            wrapping_text(stdscr, 1, f"Question Number: {question_number} / {num_questions}")
         elif question_number != None:
-            stdscr.addstr(1, 0, f"Question Number: {question_number}")
-        stdscr.addstr(2, 0, "Context:")
+            wrapping_text(stdscr, 1, f"Question Number: {question_number}")
+        wrapping_text(stdscr, 2, "Context:")
         while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
-            try:
-                stdscr.addstr(0, 0, "Screen too small (c)")
-            except:
-                pass
+            wrapping_text(stdscr, 0, "Screen too small (c)")
             stdscr.refresh()
             continue
 
-        try:
-            stdscr.addstr(c_line_num + 1, 0, "Question:")
-        except:
-            pass
+        wrapping_text(stdscr, c_line_num + 1, "Question:")
         
         while (q_line_num := wrapping_text(stdscr, c_line_num + 2, question)) == -1:
-            try:
-                stdscr.addstr(0, 0, "Screen too small (q)")
-            except:
-                pass
+            wrapping_text(stdscr, 0, "Screen too small (q)")
             stdscr.refresh()
             continue
 
@@ -97,10 +88,7 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
 
         if reveal:
             height, _ = stdscr.getmaxyx()
-            try:
-                stdscr.addstr(height - 1, 0, "Press enter to continue")
-            except:
-                pass
+            wrapping_text(stdscr, height - 1, "Press enter to continue")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -157,20 +145,17 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
                 break
             if not(hide_timer):
                 if TIME_LIMIT == DEFAULT_TIME_LIMIT:
-                    stdscr.addstr(0, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
                 else:
-                    stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                    wrapping_text(stdscr, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 480 else red_text
-                stdscr.addstr(0, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
-        stdscr.addstr(1, 0, "Context:")
+                wrapping_text(stdscr, 0, f"Time taken: {time_taken:.1f} seconds", time_color)
+        wrapping_text(stdscr, 1, "Context:")
 
         while (c_line_num := wrapping_text(stdscr, 2, context)) == -1:
-            try:
-                stdscr.addstr(0, 0, "Screen too small (c)")
-            except:
-                pass
+            wrapping_text(stdscr, 0, "Screen too small (c)")
             stdscr.refresh()
             continue
 
@@ -183,22 +168,16 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
         correct_answer = question_data["label"]
         incorrect = incorrect_list[q_idx] if incorrect_list else None
 
-        try:
-            stdscr.addstr(question_start_line + 1, 0, f"Question {q_idx + 1}:")
-            reveal_x = 12
-            if q_idx + 1 == len(questions):
-                stdscr.addstr(question_start_line + 1, 12, "Last Question", red_text)
-                reveal_x = 27
-            if reveal:
-                stdscr.addstr(question_start_line + 1, reveal_x, f"{'Incorrect' if incorrect != -1 else 'Correct!'}", red_text if incorrect != -1 else green_text)
-        except:
-            continue
+        wrapping_text(stdscr, question_start_line + 1, f"Question {q_idx + 1}:")
+        reveal_x = 12
+        if q_idx + 1 == len(questions):
+            wrapping_text(stdscr, question_start_line + 1, "Last Question", red_text, x_offset=12)
+            reveal_x = 27
+        if reveal:
+            wrapping_text(stdscr, question_start_line + 1, f"{'Incorrect' if incorrect != -1 else 'Correct!'}", red_text if incorrect != -1 else green_text, x_offset=reveal_x)
 
         while (q_line_num := wrapping_text(stdscr, question_start_line + 2, question)) == -1:
-            try:
-                stdscr.addstr(0, 0, "Screen too small (q)")
-            except:
-                pass
+            wrapping_text(stdscr, 0, "Screen too small (q)")
             stdscr.refresh()
             continue
 
@@ -234,10 +213,7 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
 
         if reveal:
             height, _ = stdscr.getmaxyx()
-            try:
-                stdscr.addstr(height - 1, 0, f"Press enter to continue, {sum(x == -1 for x in incorrect_list)}/{len(questions)} Correct")
-            except:
-                pass
+            wrapping_text(stdscr, height - 1, f"Press enter to continue, {sum(x == -1 for x in incorrect_list)}/{len(questions)} Correct")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -380,10 +356,10 @@ def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer):
                 break
     while True:
         stdscr.erase()
-        stdscr.addstr(0, 0, f"Test completed! Your score: {score}/{completed_questions}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
-        stdscr.addstr(3, 0, "Press 'esc' to exit.")
-        stdscr.addstr(4, 0, "Press 'r' for full review")
-        stdscr.addstr(5, 0, "Incorrect questions:")
+        wrapping_text(stdscr, 0, f"Test completed! Your score: {score}/{completed_questions}. Full time taken {ceil(total_time)} seconds or {floor(ceil(total_time) / 60)} minutes and {ceil(total_time) - floor(ceil(total_time) / 60) * 60} seconds")
+        wrapping_text(stdscr, 3, "Press 'esc' to exit.")
+        wrapping_text(stdscr, 4, "Press 'r' for full review")
+        wrapping_text(stdscr, 5, "Incorrect questions:")
         wrapping_text(stdscr, 6, f"{' '.join(wrong_questions)}")
         stdscr.refresh()
         key = stdscr.getch()
