@@ -25,7 +25,7 @@ def welcome_screen(stdscr):
     curses.curs_set(0)
     stdscr.clear()
     stdscr.addstr(0, 0, "Welcome to the LSAT Practice Game!")
-    arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter to start.")
+    arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter to start. (WASD also supported throughout this program)")
     num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
     option_start_line = num_line + 1
     num_options = 10 # increase if adding more options
@@ -58,9 +58,9 @@ def welcome_screen(stdscr):
         key = stdscr.getch()
         if key == ord('h'):
             hide_timer = not(hide_timer)
-        elif key == curses.KEY_UP and current_row > option_start_line:
+        elif (key == curses.KEY_UP or key == ord('w')) and current_row > option_start_line:
             current_row -= 1
-        elif key == curses.KEY_DOWN and current_row < option_start_line + num_options - 1:
+        elif (key == curses.KEY_DOWN or key == ord('s')) and current_row < option_start_line + num_options - 1:
             current_row += 1
         elif key == curses.KEY_ENTER or key in [10, 13]:
             chosen_option = current_row - option_start_line  # return 0 for Original Mode, 1 for Time-based Mode, ...

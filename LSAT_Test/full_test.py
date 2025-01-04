@@ -140,15 +140,15 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
         
         if key == curses.KEY_RESIZE:
             current_row = None
-        elif key == curses.KEY_UP and current_row > a_line_num + 1:
+        elif (key == curses.KEY_UP or key == ord('w')) and current_row > a_line_num + 1:
             current_row -= 1
-        elif key == curses.KEY_DOWN and current_row < a_line_num + 2 * num_options - 2:
+        elif (key == curses.KEY_DOWN or key == ord('s')) and current_row < a_line_num + 2 * num_options - 2:
             current_row += 1
-        elif key == curses.KEY_LEFT and question_index > 0:
+        elif (key == curses.KEY_LEFT or key == ord('a')) and question_index > 0:
             just_changed = True
             current_row = None
             question_index -= 1
-        elif key == curses.KEY_RIGHT and question_index < num_questions - 1:
+        elif (key == curses.KEY_RIGHT or key == ord('d')) and question_index < num_questions - 1:
             just_changed = True
             current_row = None
             question_index += 1

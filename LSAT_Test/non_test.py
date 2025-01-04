@@ -107,9 +107,9 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
         
         if key == curses.KEY_RESIZE:
             current_row = None
-        elif key == curses.KEY_UP and current_row > a_line_num + 1:
+        elif (key == curses.KEY_UP or key == ord('w')) and current_row > a_line_num + 1:
             current_row -= 1
-        elif key == curses.KEY_DOWN and current_row < a_line_num + 2 * num_options - 2:
+        elif (key == curses.KEY_DOWN or key == ord('s')) and current_row < a_line_num + 2 * num_options - 2:
             current_row += 1
         elif key in range(49, 54):
             # 49 = 1
@@ -244,15 +244,15 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
         
         if key == curses.KEY_RESIZE:
             current_row = None
-        elif key == curses.KEY_UP and current_row > a_line_num + 1:
+        elif (key == curses.KEY_UP or key == ord('w')) and current_row > a_line_num + 1:
             current_row -= 1
-        elif key == curses.KEY_DOWN and current_row < a_line_num + 2 * num_options - 2: #something is wrong here
+        elif (key == curses.KEY_DOWN or key == ord('s')) and current_row < a_line_num + 2 * num_options - 2: #something is wrong here
             current_row += 1
-        elif key == curses.KEY_LEFT and q_idx > 0:
+        elif (key == curses.KEY_LEFT or key == ord('a')) and q_idx > 0:
             just_changed = True
             current_row = None
             q_idx -= 1
-        elif key == curses.KEY_RIGHT and q_idx < len(questions) - 1:
+        elif (key == curses.KEY_RIGHT or key == ord('d')) and q_idx < len(questions) - 1:
             just_changed = True
             current_row = None
             q_idx += 1
