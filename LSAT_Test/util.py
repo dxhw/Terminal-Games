@@ -2,6 +2,7 @@
 
 import json
 import random
+import curses
 
 QUESTION_PATH = "LSAT_DATA/"
 LR_PATH = QUESTION_PATH + "all_lr.json"
@@ -115,3 +116,27 @@ def wrapping_text(stdscr, start_y, target, color=None):
             return -1
     return y_num + 1 # returns the next line to print on
 ###########
+
+def dark_colors():
+    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(3, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
+    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_WHITE)
+    curses.init_pair(6, curses.COLOR_BLUE, curses.COLOR_WHITE)
+    curses.init_pair(7, curses.COLOR_WHITE, curses.COLOR_BLACK)
+
+def light_colors():
+    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_WHITE)
+    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_WHITE)
+    curses.init_pair(3, curses.COLOR_BLUE, curses.COLOR_WHITE)
+    curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(6, curses.COLOR_CYAN, curses.COLOR_BLACK)
+    curses.init_pair(7, curses.COLOR_BLACK, curses.COLOR_WHITE)
+
+def invert_colors(dark: bool):
+    if dark:
+        light_colors()
+    else:
+        dark_colors()

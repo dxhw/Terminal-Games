@@ -2,20 +2,17 @@
 
 import curses
 import time
-from util import wrapping_text
+from util import wrapping_text, dark_colors, invert_colors
 from math import ceil, floor
 
 LR_QUESTION_NUMBER = 26
 RC_PASSAGE_NUMBER = 4
+DEFAULT_TIME_LIMIT = 20000
 TIME_LIMIT = 20000 # default
+DARK = True
 
 # Function to display a question using curses
 def display_question_lr(stdscr, question_data, cummulative_time=0, question_number=0, hide_timer=False, num_questions=LR_QUESTION_NUMBER, reveal=False, incorrect=-1, time_taken=None):
-    curses.start_color()
-    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
-    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_WHITE)
     green_text = curses.color_pair(1)
     red_text = curses.color_pair(2)
     current_row = None
@@ -38,7 +35,10 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
                 chosen_option = None
                 break
             if not(hide_timer):
-                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                if TIME_LIMIT == DEFAULT_TIME_LIMIT:
+                    stdscr.addstr(0, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                else:
+                    stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
@@ -70,10 +70,7 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
             stdscr.refresh()
             continue
 
-        try:
-            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (1-5) using either the number or arrow keys: ")
-        except:
-            pass
+        wrapping_text(stdscr, q_line_num + 1, "Choose an answer with number or arrow keys. (h)ide timer, (l)ight/dark mode: ")
 
         a_line_num = q_line_num + 1
         num_options = len(answers)
@@ -121,6 +118,13 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
         elif key == ord('\n'):
             chosen_option = (current_row - (a_line_num + 1))
             break
+        elif key == ord('h'):
+            hide_timer = not(hide_timer)
+        elif key == ord('l'):
+            global DARK
+            invert_colors(DARK)
+            DARK = not(DARK)
+            stdscr.bkgd(' ', curses.color_pair(7))
         elif key == ord('\x1b'):
             chosen_option = None
             end = True
@@ -130,13 +134,6 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
     return chosen_option, correct_answer, end, elapsed_time - cummulative_time
 
 def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None, hide_timer=False):
-    curses.start_color()
-    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
-    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_WHITE)
-    curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_WHITE)
     green_text = curses.color_pair(1)
     red_text = curses.color_pair(2)
     current_row = None
@@ -159,7 +156,10 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
             if remaining_time == 0:
                 break
             if not(hide_timer):
-                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                if TIME_LIMIT == DEFAULT_TIME_LIMIT:
+                    stdscr.addstr(0, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                else:
+                    stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 480 else red_text
@@ -202,10 +202,7 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
             stdscr.refresh()
             continue
 
-        try:
-            stdscr.addstr(q_line_num + 1, 0, "Choose an answer (use UP/DOWN arrow keys and Enter to select): ")
-        except:
-            pass
+        wrapping_text(stdscr, q_line_num + 1, "Choose an answer with number or arrow keys. (h)ide timer, (l)ight/dark mode: ")
 
         a_line_num = q_line_num + 1
         if current_row is None:
@@ -276,6 +273,13 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
                 break
             if q_idx != len(questions) - 1:
                 q_idx += 1
+        elif key == ord('h'):
+            hide_timer = not(hide_timer)
+        elif key == ord('l'):
+            global DARK
+            invert_colors(DARK)
+            DARK = not(DARK)
+            stdscr.bkgd(' ', curses.color_pair(7))
         elif key == ord('\x1b'):
             end = True
             break
@@ -295,6 +299,8 @@ def full_review_rc(stdscr, answer_data):
 
 # Main function to run the test
 def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer):
+    curses.start_color()
+    dark_colors()
     global TIME_LIMIT 
     TIME_LIMIT = time_limit
     score = 0
@@ -327,8 +333,15 @@ def run_section_non_test(stdscr, questions, test_type, time_limit, hide_timer):
             wrapping_text(stdscr, height - 3, f"{'Correct!' if selected_answer == correct_answer else 'Wrong!'} Press 'r' to review, 'esc' to end the test, and any other key to continue.")
             stdscr.nodelay(False)
             key = stdscr.getch()
+            while key == ord('l'):
+                global DARK
+                invert_colors(DARK)
+                DARK = not(DARK)
+                stdscr.bkgd(' ', curses.color_pair(7))
+                key = stdscr.getch()
             if key == ord('r'):
                 display_question_lr(stdscr, question_data, 0, None, False, None, True, incorrect, time_taken)
+
             elif key == '\x1b': # escape
                 break
         else: # RC mode

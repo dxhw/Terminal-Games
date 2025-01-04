@@ -2,9 +2,10 @@
 
 import curses
 import time
-from util import wrapping_text
+from util import wrapping_text, invert_colors, dark_colors
 from math import ceil, floor
 
+DEFAULT_TIME_LIMIT = 20000
 TIME_LIMIT = 20000 # default
 NO_ANSWER_GIVEN = 10
 FULL_INTERMISSION_TIME = 60 * 10 # 10 minutes
@@ -12,12 +13,8 @@ FULL_INTERMISSION_TIME = 60 * 10 # 10 minutes
 # Function to display a question using curses
 def display_section_questions(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None, hide_timer=False, flagged=None):
     curses.start_color()
-    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-    curses.init_pair(4, curses.COLOR_GREEN, curses.COLOR_WHITE)
-    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_WHITE)
-    curses.init_pair(6, curses.COLOR_YELLOW, curses.COLOR_WHITE)
+    dark_colors()
+    dark = True
     green_text = curses.color_pair(1)
     red_text = curses.color_pair(2)
 
@@ -51,7 +48,10 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             if remaining_time == 0:
                 break
             if not(hide_timer):
-                stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                if TIME_LIMIT == DEFAULT_TIME_LIMIT:
+                    stdscr.addstr(0, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {ceil(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                else:
+                    stdscr.addstr(0, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
@@ -87,10 +87,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             stdscr.refresh()
             continue
 
-        try:
-            stdscr.addstr(q_line_num + 1, 0, "Use 1-5 or arrows to choose answer. 'f' to flag a question. 'x' to mark a decoy")
-        except:
-            pass
+        wrapping_text(stdscr, q_line_num + 1, "Use 1-5 or arrows to choose answer. (f)lag, (x)decoy, (h)ide/unhide timer, (l)ight/dark mode")
 
         a_line_num = q_line_num + 1
         num_options = len(answers)
@@ -157,7 +154,8 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             question_index += 1
         elif key in range(49, 54):
             # 49 = 1
-            selected_answers[question_index] = key - 49
+            if not reveal:
+                selected_answers[question_index] = key - 49
             just_changed = True
             current_row = None
             if question_index != num_questions - 1:
@@ -173,7 +171,8 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             # flag or unflag
             flagged[question_index] = not(flagged[question_index])
         elif key == ord('\n'):
-            selected_answers[question_index] = (current_row - (a_line_num + 1))
+            if not reveal:
+                selected_answers[question_index] = (current_row - (a_line_num + 1))
             just_changed = True
             current_row = None
             if all(answer is not None for answer in selected_answers):
@@ -184,6 +183,12 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
                 question_index += 1
         elif key == ord('\x1b'):
             break
+        elif key == ord('h'):
+            hide_timer = not(hide_timer)
+        elif key == ord('l'):
+            invert_colors(dark)
+            dark = not(dark)
+            stdscr.bkgd(' ', curses.color_pair(7))
     if not elapsed_time:
         elapsed_time = 0
     return selected_answers, elapsed_time - cummulative_time, flagged
