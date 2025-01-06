@@ -36,9 +36,11 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
                 break
             if not(hide_timer):
                 if TIME_LIMIT == DEFAULT_TIME_LIMIT:
-                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {floor(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                    elapsed_time = floor(elapsed_time)
+                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time} seconds or {floor(elapsed_time / 60)} minutes and {elapsed_time - floor(elapsed_time / 60) * 60} seconds")
                 else:
-                    wrapping_text(stdscr, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                    remaining_time = ceil(remaining_time)
+                    wrapping_text(stdscr, 0, f"Time left: {remaining_time} seconds or {floor(remaining_time / 60)} minutes and {remaining_time - floor(remaining_time / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
@@ -145,9 +147,11 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
                 break
             if not(hide_timer):
                 if TIME_LIMIT == DEFAULT_TIME_LIMIT:
-                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time:.1f} seconds or {floor(ceil(elapsed_time) / 60)} minutes and {floor(elapsed_time) - floor(ceil(elapsed_time) / 60) * 60} seconds")
+                    elapsed_time = floor(elapsed_time)
+                    wrapping_text(stdscr, 0, f"Elapsed time: {elapsed_time} seconds or {floor(elapsed_time / 60)} minutes and {elapsed_time - floor(elapsed_time / 60) * 60} seconds")
                 else:
-                    wrapping_text(stdscr, 0, f"Time left: {remaining_time:.1f} seconds or {floor(ceil(remaining_time) / 60)} minutes and {ceil(remaining_time) - floor(ceil(remaining_time) / 60) * 60} seconds")
+                    remaining_time = ceil(remaining_time)
+                    wrapping_text(stdscr, 0, f"Time left: {remaining_time} seconds or {floor(remaining_time / 60)} minutes and {remaining_time - floor(remaining_time / 60) * 60} seconds")
         else:
             if time_taken:
                 time_color = green_text if time_taken < 480 else red_text
