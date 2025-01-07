@@ -61,7 +61,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
 
         wrapping_text(stdscr, 1, f"Question Number: {question_index + 1} / {num_questions}")
         if question_index + 1 == num_questions:
-            wrapping_text(stdscr, 1, "Last Question", red_text, 28)
+            wrapping_text(stdscr, 1, "Last Question (Enter to Submit)", red_text, 28)
         
         true_indices = ", ".join(str(index + 1) for index, flag in enumerate(flagged) if flag)
         wrapping_text(stdscr, 2, "flags: " + true_indices)
@@ -118,6 +118,10 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
         if reveal:
             if incorrect == NO_ANSWER_GIVEN:
                 wrapping_text(stdscr, 0, "NO ANSWER GIVEN", red_text)
+            elif incorrect == -1:
+                wrapping_text(stdscr, 0, "Correct!", green_text)
+            else:
+                wrapping_text(stdscr, 0, "Incorrect", red_text)
             height, _ = stdscr.getmaxyx()
             wrapping_text(stdscr, height - 1, f"Press enter to continue, {sum(x == -1 for x in incorrect_list)}/{num_questions} Correct")
 
@@ -156,12 +160,15 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
         elif key == ord("f"):
             # flag or unflag
             flagged[question_index] = not(flagged[question_index])
-        elif key == ord('\n'):
+        # move forward and select answer with either enter or space
+        elif key == ord('\n') or key == ord(' '): 
             if not reveal:
                 selected_answers[question_index] = (current_row - (a_line_num + 1))
             just_changed = True
             current_row = None
-            if all(answer is not None for answer in selected_answers):
+            # submit if all questions answered and "enter" pressed on final question
+            # (don't submit with space)
+            if all(answer is not None for answer in selected_answers) and key == ord('\n'):
                 break
             if reveal and question_index == num_questions - 1:
                 break

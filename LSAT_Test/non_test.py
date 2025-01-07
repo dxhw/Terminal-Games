@@ -90,7 +90,7 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
 
         if reveal:
             height, _ = stdscr.getmaxyx()
-            wrapping_text(stdscr, height - 1, "Press enter to continue")
+            wrapping_text(stdscr, height - 1, "Press Enter or Space to continue")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -105,7 +105,7 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
             # 49 = 1
             chosen_option = key - 49
             break
-        elif key == ord('\n'):
+        elif key == ord('\n') or key == ord(' '):
             chosen_option = (current_row - (a_line_num + 1))
             break
         elif key == ord('h'):
@@ -175,8 +175,8 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
         wrapping_text(stdscr, question_start_line + 1, f"Question {q_idx + 1}:")
         reveal_x = 12
         if q_idx + 1 == len(questions):
-            wrapping_text(stdscr, question_start_line + 1, "Last Question", red_text, x_offset=12)
-            reveal_x = 27
+            wrapping_text(stdscr, question_start_line + 1, "Last Question (Enter to Submit)", red_text, x_offset=12)
+            reveal_x = 44
         if reveal:
             wrapping_text(stdscr, question_start_line + 1, f"{'Incorrect' if incorrect != -1 else 'Correct!'}", red_text if incorrect != -1 else green_text, x_offset=reveal_x)
 
@@ -217,7 +217,7 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
 
         if reveal:
             height, _ = stdscr.getmaxyx()
-            wrapping_text(stdscr, height - 1, f"Press enter to continue, {sum(x == -1 for x in incorrect_list)}/{len(questions)} Correct")
+            wrapping_text(stdscr, height - 1, f"Press Enter or Space to continue, {sum(x == -1 for x in incorrect_list)}/{len(questions)} Correct")
 
         stdscr.refresh()
         key = stdscr.getch()
@@ -243,14 +243,17 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
             current_row = None
             if q_idx != len(questions) - 1:
                 q_idx += 1
-        elif key == ord('\n'):
+        elif key == ord('\n') or key == ord(' '):
             selected_answers[q_idx] = (current_row - (a_line_num + 1))
             just_changed = True
             current_row = None
-            if all(answer is not None for answer in selected_answers):
-                break
-            if reveal and q_idx == len(questions) - 1:
-                break
+            if key == ord('\n'):
+                if all(answer is not None for answer in selected_answers):
+                    break
+                # slightly different behavior than full test here because there should be more
+                # resistance to clearing the review here
+                if reveal and q_idx == len(questions) - 1: 
+                    break
             if q_idx != len(questions) - 1:
                 q_idx += 1
         elif key == ord('h'):
