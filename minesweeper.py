@@ -90,6 +90,8 @@ TURQOISE = (2,123,123) #6
 PURPLE = (132, 0, 132) #7
 GRAY_EIGHT = (114,114,114) #8
 
+FPS = 20
+
 
 # Create screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -338,7 +340,7 @@ def main():
     
         if not end_time or not time.time() - end_time > 2:
             pygame.display.flip()
-        clock.tick(20)  # Limit the frame rate to 20 FPS
+        clock.tick(FPS)  # Limit the frame rate to 20 FPS
 
 main()
 pygame.quit()
