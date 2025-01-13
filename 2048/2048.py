@@ -20,8 +20,8 @@ pygame.init()
 GRID_SIZE = 4
 TILE_SIZE = 5 * SCALE
 TILE_MARGIN = SCALE
-FONT_SIZE = 2 * SCALE
-WIDTH = GRID_SIZE * TILE_SIZE + (GRID_SIZE + 1) * TILE_MARGIN
+FONT_SIZE = 3 * SCALE
+WIDTH = GRID_SIZE * TILE_SIZE + (GRID_SIZE + 1) * TILE_MARGIN + SCALE * 2
 HEIGHT = WIDTH + FONT_SIZE
 FPS = 60
 
@@ -86,8 +86,8 @@ def draw_grid(start_time, display_game_over=False):
         for c in range(GRID_SIZE):
             value = grid[r][c]
             rect = pygame.Rect(
-                c * (TILE_SIZE + TILE_MARGIN) + TILE_MARGIN,
-                r * (TILE_SIZE + TILE_MARGIN) + TILE_MARGIN + FONT_SIZE,
+                c * (TILE_SIZE + TILE_MARGIN) + TILE_MARGIN + SCALE,
+                r * (TILE_SIZE + TILE_MARGIN) + TILE_MARGIN + FONT_SIZE + SCALE,
                 TILE_SIZE,
                 TILE_SIZE,
             )
