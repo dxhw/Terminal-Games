@@ -119,7 +119,8 @@ def move_left():
         grid[r] = slide_row_left(grid[r])
         grid[r] = merge_row(grid[r])
         grid[r] = slide_row_left(grid[r])
-    move_number += 1
+    if grid != previous_grids[move_number]:
+        move_number += 1
     
 
 def rotate_grid():
@@ -191,6 +192,7 @@ grid_rotated[0] = False
 
 # Main game loop
 clock = pygame.time.Clock()
+pygame.key.set_repeat(500, 50)
 running = True
 display_game_over = False
 start_time = time.time()
@@ -200,29 +202,25 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT or event.key == pygame.K_a:
-                if display_game_over:
-                    continue
-                grid_rotated[move_number] = False
-                move_left()
-                add_new_tile()
+                if not display_game_over:
+                    grid_rotated[move_number] = False
+                    move_left()
+                    add_new_tile()
             elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-                if display_game_over:
-                    continue
-                grid_rotated[move_number] = False
-                move_right()
-                add_new_tile()
+                if not display_game_over:
+                    grid_rotated[move_number] = False
+                    move_right()
+                    add_new_tile()
             elif event.key == pygame.K_UP or event.key == pygame.K_w:
-                if display_game_over:
-                    continue
-                grid_rotated[move_number] = True
-                move_up()
-                add_new_tile()
+                if not display_game_over:
+                    grid_rotated[move_number] = True
+                    move_up()
+                    add_new_tile()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-                if display_game_over:
-                    continue
-                grid_rotated[move_number] = True
-                move_down()
-                add_new_tile()
+                if not display_game_over:
+                    grid_rotated[move_number] = True
+                    move_down()
+                    add_new_tile()
             elif event.key == pygame.K_u:
                 display_game_over = False
                 undo()
