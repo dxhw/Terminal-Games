@@ -155,8 +155,9 @@ def undo():
     if move_number != 1:
         move_number -= 1
     grid = previous_grids[move_number]
-    if grid_rotated[move_number]:
+    while grid_rotated[move_number] > 0:
         rotate_grid()
+        grid_rotated[move_number] -= 1
 
 def restart():
     global grid
@@ -170,7 +171,7 @@ def restart():
     add_new_tile()
     add_new_tile()
     previous_grids[0] = copy.deepcopy(grid)
-    grid_rotated[0] = False
+    grid_rotated[0] = 0
 
 def is_game_over():
     for r in range(GRID_SIZE):
@@ -188,7 +189,7 @@ add_new_tile()
 add_new_tile()
 
 previous_grids[0] = copy.deepcopy(grid)
-grid_rotated[0] = False
+grid_rotated[0] = 0
 
 # Main game loop
 clock = pygame.time.Clock()
@@ -203,22 +204,22 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                 if not display_game_over:
-                    grid_rotated[move_number] = False
+                    grid_rotated[move_number] = 0
                     move_left()
                     add_new_tile()
             elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                 if not display_game_over:
-                    grid_rotated[move_number] = False
+                    grid_rotated[move_number] = 2
                     move_right()
                     add_new_tile()
             elif event.key == pygame.K_UP or event.key == pygame.K_w:
                 if not display_game_over:
-                    grid_rotated[move_number] = True
+                    grid_rotated[move_number] = 1
                     move_up()
                     add_new_tile()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                 if not display_game_over:
-                    grid_rotated[move_number] = True
+                    grid_rotated[move_number] = 3
                     move_down()
                     add_new_tile()
             elif event.key == pygame.K_u:
