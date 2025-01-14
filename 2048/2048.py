@@ -121,6 +121,8 @@ def move_left():
         grid[r] = slide_row_left(grid[r])
     if grid != previous_grids[move_number]:
         move_number += 1
+        return True
+    return False
     
 
 def rotate_grid():
@@ -130,23 +132,26 @@ def rotate_grid():
 def move_right():
     rotate_grid()
     rotate_grid()
-    move_left()
+    changed = move_left()
     rotate_grid()
     rotate_grid()
+    return changed
 
 def move_up():
     rotate_grid()
     rotate_grid()
     rotate_grid()
-    move_left()
+    changed = move_left()
     rotate_grid()
+    return changed
 
 def move_down():
     rotate_grid()
-    move_left()
+    changed = move_left()
     rotate_grid()
     rotate_grid()
     rotate_grid()
+    return changed
 
 def undo():
     global move_number
@@ -205,23 +210,23 @@ while running:
             if event.key == pygame.K_LEFT or event.key == pygame.K_a:
                 if not display_game_over:
                     grid_rotated[move_number] = 0
-                    move_left()
-                    add_new_tile()
+                    if move_left():
+                        add_new_tile()
             elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                 if not display_game_over:
                     grid_rotated[move_number] = 2
-                    move_right()
-                    add_new_tile()
+                    if move_right():
+                        add_new_tile()
             elif event.key == pygame.K_UP or event.key == pygame.K_w:
                 if not display_game_over:
                     grid_rotated[move_number] = 1
-                    move_up()
-                    add_new_tile()
+                    if move_up():
+                        add_new_tile()
             elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
                 if not display_game_over:
                     grid_rotated[move_number] = 3
-                    move_down()
-                    add_new_tile()
+                    if move_down():
+                        add_new_tile()
             elif event.key == pygame.K_u:
                 display_game_over = False
                 undo()
