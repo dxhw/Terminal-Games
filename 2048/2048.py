@@ -9,9 +9,13 @@ import time
 
 parser = argparse.ArgumentParser(description="This program runs the game 2048! Please put in additional parameters to customize your game")
 parser.add_argument('-scale', dest='screen_scale', help="the scale of your screen, default is 20", default=20, type=int)
+parser.add_argument('-start', dest='start_tile', help="the tile you'd like to start with, default is none", default=None, type=int)
 
 args = parser.parse_args()
 SCALE = args.screen_scale
+# the start tile is not checked to be a valid tile, so any tile is technically valid, 
+# it just won't be mergeable and will appear gray
+START_TILE = args.start_tile 
 
 # Initialize pygame
 pygame.init()
@@ -157,7 +161,10 @@ def undo():
     global move_number
     global grid
     global previous_grids
-    if move_number != 1:
+    if move_number == 1:
+        grid = previous_grids[0]
+        return
+    else:
         move_number -= 1
     grid = previous_grids[move_number]
     while grid_rotated[move_number] > 0:
@@ -192,6 +199,9 @@ def is_game_over():
 # Initialize the grid with two tiles
 add_new_tile()
 add_new_tile()
+# Add start tile
+if START_TILE != None:
+    grid[0][0] = START_TILE
 
 previous_grids[0] = copy.deepcopy(grid)
 grid_rotated[0] = 0
