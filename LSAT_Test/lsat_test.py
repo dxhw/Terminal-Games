@@ -23,29 +23,32 @@ from non_test import run_section_non_test
 
 def welcome_screen(stdscr):
     curses.curs_set(0)
-    stdscr.clear()
-    wrapping_text(stdscr, 0, "Welcome to the LSAT Practice Game!")
-    arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter or Space to start. (WASD also supported throughout this program)")
-    num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
-    option_start_line = num_line + 1
-    num_options = 10 # increase if adding more options
-    wrapping_text(stdscr, option_start_line, "1. Logical Reasoning Mode")
-    wrapping_text(stdscr, option_start_line + 1, "2. Reading Comphrension Mode")
-    wrapping_text(stdscr, option_start_line + 2, "3. Time Strict Logical Reasoning Mode (80s per Q)")
-    wrapping_text(stdscr, option_start_line + 3, "4. Time Strict Reading Comphrension Mode (8 min per passage)")
-    wrapping_text(stdscr, option_start_line + 4, "5. LR Test Mode")
-    wrapping_text(stdscr, option_start_line + 5, "6. RC Test Mode")
-    wrapping_text(stdscr, option_start_line + 6, "7. No Time Limit LR Test Mode")
-    wrapping_text(stdscr, option_start_line + 7, "8. No Time Limit RC Test Mode")
-    wrapping_text(stdscr, option_start_line + 8, "9. Full Test Mode")
-    wrapping_text(stdscr, option_start_line + 9, "0. No Time Limit Full Test Mode")
-    #add new options here
 
-    current_row = option_start_line
+    current_row = None
     chosen_option = -1
     hide_timer = False
     
     while chosen_option == -1:
+        stdscr.clear()
+        wrapping_text(stdscr, 0, "Welcome to the LSAT Practice Game!")
+        arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter or Space to start. (WASD also supported throughout this program)")
+        num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
+        option_start_line = num_line + 1
+        num_options = 10 # increase if adding more options
+        wrapping_text(stdscr, option_start_line, "1. Logical Reasoning Mode")
+        wrapping_text(stdscr, option_start_line + 1, "2. Reading Comphrension Mode")
+        wrapping_text(stdscr, option_start_line + 2, "3. Time Strict Logical Reasoning Mode (80s per Q)")
+        wrapping_text(stdscr, option_start_line + 3, "4. Time Strict Reading Comphrension Mode (8 min per passage)")
+        wrapping_text(stdscr, option_start_line + 4, "5. LR Test Mode")
+        wrapping_text(stdscr, option_start_line + 5, "6. RC Test Mode")
+        wrapping_text(stdscr, option_start_line + 6, "7. No Time Limit LR Test Mode")
+        wrapping_text(stdscr, option_start_line + 7, "8. No Time Limit RC Test Mode")
+        wrapping_text(stdscr, option_start_line + 8, "9. Full Test Mode")
+        wrapping_text(stdscr, option_start_line + 9, "0. No Time Limit Full Test Mode")
+        #add new options here
+        if not current_row:
+            current_row = option_start_line
+
         wrapping_text(stdscr, stdscr.getmaxyx()[0] - 3, "Hide Timer? (press 'h') " + str(hide_timer) + "  ")
         for i in range(option_start_line, option_start_line + num_options):
             if i == current_row:
