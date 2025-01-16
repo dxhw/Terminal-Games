@@ -26,6 +26,8 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
     decoys = [set() for _ in range(num_questions)] # decoys are not maintained for reviewing
 
     elapsed_time = None
+    saved_paused_time = 0
+    pause_start = None
     start_time = time.time() - cummulative_time
     stdscr.nodelay(True) 
 
@@ -43,7 +45,11 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
         incorrect = incorrect_list[question_index] if incorrect_list else None
 
         if not reveal:
-            elapsed_time = time.time() - start_time
+            if pause_start:
+                paused_time = saved_paused_time + time.time() - pause_start
+            else:
+                paused_time = saved_paused_time
+            elapsed_time = time.time() - start_time - paused_time
             remaining_time = max(0, TIME_LIMIT - elapsed_time)
             if remaining_time == 0:
                 break
@@ -54,6 +60,8 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
                 else:
                     remaining_time = ceil(remaining_time)
                     wrapping_text(stdscr, 0, f"Time left: {remaining_time} seconds or {floor(remaining_time / 60)} minutes and {remaining_time - floor(remaining_time / 60) * 60} seconds")
+            if pause_start:
+                wrapping_text(stdscr, 0, "TIMER PAUSED", red_text, 60)
         else:
             if time_taken:
                 time_color = green_text if time_taken < 80 else red_text
@@ -79,7 +87,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             stdscr.refresh()
             continue
 
-        wrapping_text(stdscr, q_line_num + 1, "Use 1-5 or arrows to choose answer. (f)lag, (x)decoy, (h)ide/unhide timer, (l)ight/dark mode")
+        wrapping_text(stdscr, q_line_num + 1, "Use 1-5 or arrows to choose answer. (f)lag, (x)decoy, (h)ide/unhide timer, (l)ight/dark mode, (p)ause timer")
 
         a_line_num = q_line_num + 1
         num_options = len(answers)
@@ -182,6 +190,13 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             invert_colors(dark)
             dark = not(dark)
             stdscr.bkgd(' ', curses.color_pair(7))
+        elif key == ord('p'):
+            if not pause_start:
+                pause_start = time.time()
+            else:
+                saved_paused_time += time.time() - pause_start
+                pause_start = None
+
     if not elapsed_time:
         elapsed_time = 0
     return selected_answers, elapsed_time - cummulative_time, flagged
