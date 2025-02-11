@@ -7,6 +7,7 @@ import curses
 QUESTION_PATH = "LSAT_DATA/"
 LR_PATH = QUESTION_PATH + "all_lr.json"
 RC_PATH = QUESTION_PATH + "all_rc.json"
+AR_PATH = QUESTION_PATH + "all_ar.json"
 
 ##### Utils for loading questions #######
 def load_full_test_questions():
@@ -25,6 +26,8 @@ def load_questions(test_type, is_test):
         return load_full_test_questions()
     elif test_type == "LR":
         filename = LR_PATH
+    elif test_type == "AR":
+        filename = AR_PATH
     else:
         filename = RC_PATH
     with open(filename, 'r') as file:
@@ -54,7 +57,7 @@ def restructure_rc_questions(data):
 def get_test_questions(questions, test_type):
     try:
         index = random.randint(0, len(questions) - 2)
-        if test_type == "LR":
+        if test_type == "LR" or test_type == "AR":
             first_question = index
             while questions[first_question]["id_string"][-2:] != "_1":
                 first_question -= 1

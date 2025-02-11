@@ -32,7 +32,7 @@ def welcome_screen(stdscr):
         stdscr.clear()
         wrapping_text(stdscr, 0, "Welcome to the LSAT Practice Game!")
         arr_line = wrapping_text(stdscr, 1, "Use arrow keys to select a mode and press Enter or Space to start. (WASD also supported throughout this program)")
-        num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard.")
+        num_line = wrapping_text(stdscr, arr_line, "Or press the number associated with the mode on your keyboard. (press 'g' for a secret game mode!)")
         option_start_line = num_line + 1
         num_options = 10 # increase if adding more options
         wrapping_text(stdscr, option_start_line, "1. Logical Reasoning Mode")
@@ -87,6 +87,8 @@ def welcome_screen(stdscr):
             chosen_option = 8
         elif key == 48: #0
             chosen_option = 9
+        elif key == ord("g"):
+            chosen_option = 100 # secret logic games mode
         # add here for new options
 
         stdscr.refresh()
@@ -114,6 +116,8 @@ def welcome_screen(stdscr):
             return "FULL", is_test, 35 * 60, hide_timer
         case 9:
             return "FULL", is_test, default_time_limit, hide_timer
+        case 100:
+            return "AR", is_test, default_time_limit, hide_timer
         # add new options here
 
 # Entry point
