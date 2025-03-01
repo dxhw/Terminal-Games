@@ -26,7 +26,7 @@ All games use match, case keywords, so they require python 3.10 at least
 Have fun!
 
 ---
-<details> <summary style="font-size: 1.5em; font-weight: bold;"> Help! I want to run the LSAT test but am not familiar with git/the terminal (MacOS/Linux instructions):</summary>
+## Help! I want to run the LSAT test but am not familiar with git/the terminal (MacOS/Linux instructions):
 
 ### Quick Instructions
 Go to detailed instructions below if: this does not work for you/you want to know what this is doing/you are picky about how folders are named/organized on your computer/you are on Linux. 
@@ -71,4 +71,3 @@ This alias:
 
 5. Close and reopen the terminal (so that aliases take effect)
 6. Done! You can now run the LSAT practice program using `lsat` and update using `lsat_update`.
-</details>
