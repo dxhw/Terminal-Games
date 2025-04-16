@@ -15,6 +15,7 @@ DARK = True
 def display_question_lr(stdscr, question_data, cummulative_time=0, question_number=0, hide_timer=False, num_questions=LR_QUESTION_NUMBER, reveal=False, incorrect=-1, time_taken=None):
     green_text = curses.color_pair(1)
     red_text = curses.color_pair(2)
+    question_color = curses.color_pair(8)
     current_row = None
     end = False
     start_time = time.time() - cummulative_time
@@ -56,9 +57,9 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
             stdscr.refresh()
             continue
 
-        wrapping_text(stdscr, c_line_num + 1, "Question:")
+        wrapping_text(stdscr, c_line_num + 1, "Question:", question_color)
         
-        while (q_line_num := wrapping_text(stdscr, c_line_num + 2, question)) == -1:
+        while (q_line_num := wrapping_text(stdscr, c_line_num + 2, question, question_color | curses.A_UNDERLINE)) == -1:
             wrapping_text(stdscr, 0, "Screen too small (q)")
             stdscr.refresh()
             continue
@@ -126,6 +127,7 @@ def display_question_lr(stdscr, question_data, cummulative_time=0, question_numb
 def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=False, incorrect_list=None, time_taken=None, hide_timer=False):
     green_text = curses.color_pair(1)
     red_text = curses.color_pair(2)
+    question_color = curses.color_pair(8)
     current_row = None
     questions = question_data_list["questions"]
     context = question_data_list["context"]
@@ -172,7 +174,7 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
         correct_answer = question_data["label"]
         incorrect = incorrect_list[q_idx] if incorrect_list else None
 
-        wrapping_text(stdscr, question_start_line + 1, f"Question {q_idx + 1}:")
+        wrapping_text(stdscr, question_start_line + 1, f"Question {q_idx + 1}:", question_color)
         reveal_x = 12
         if q_idx + 1 == len(questions):
             wrapping_text(stdscr, question_start_line + 1, "Last Question (Enter to Submit)", red_text, x_offset=12)
@@ -180,7 +182,7 @@ def display_questions_rc(stdscr, question_data_list, cummulative_time=0, reveal=
         if reveal:
             wrapping_text(stdscr, question_start_line + 1, f"{'Incorrect' if incorrect != -1 else 'Correct!'}", red_text if incorrect != -1 else green_text, x_offset=reveal_x)
 
-        while (q_line_num := wrapping_text(stdscr, question_start_line + 2, question)) == -1:
+        while (q_line_num := wrapping_text(stdscr, question_start_line + 2, question, question_color | curses.A_UNDERLINE)) == -1:
             wrapping_text(stdscr, 0, "Screen too small (q)")
             stdscr.refresh()
             continue

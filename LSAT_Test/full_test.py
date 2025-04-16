@@ -17,6 +17,7 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
     dark = True
     green_text = curses.color_pair(1)
     red_text = curses.color_pair(2)
+    question_color = curses.color_pair(8)
 
     current_row = None
     num_questions = len(question_data_list)
@@ -80,9 +81,10 @@ def display_section_questions(stdscr, question_data_list, cummulative_time=0, re
             stdscr.refresh()
             continue
 
-        wrapping_text(stdscr, c_line_num + 1, "Question:")
+        wrapping_text(stdscr, c_line_num + 1, "Question:", question_color)
         
-        while (q_line_num := wrapping_text(stdscr, c_line_num + 2, question)) == -1:
+        # bitwise OR attributes together
+        while (q_line_num := wrapping_text(stdscr, c_line_num + 2, question, question_color | curses.A_UNDERLINE)) == -1:
             wrapping_text(stdscr, 0, "Screen too small (q)", red_text)
             stdscr.refresh()
             continue
