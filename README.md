@@ -34,7 +34,7 @@ Go to detailed instructions below if: this does not work for you/you want to kno
 1. Open your terminal
 2. Run `git clone https://github.com/dxhw/Terminal-Games.git`
 3. Run `echo 'alias lsat="cd ~/Terminal-Games/LSAT_Test && python3 lsat_test.py"' >> ~/.zshrc`
-4. Run `echo 'alias lsat_update=“cd ~/Terminal-Games && git pull“’ >> ~/.zshrc`
+4. Run `echo 'alias lsat_update="cd ~/Terminal-Games && git pull"' >> ~/.zshrc`
 5. Close and reopen the terminal
 6. Done! Run `lsat` to run the game and `lsat_update` to update the game (e.g. if I have told you I updated it or you want to check if I made an update)
 
@@ -60,7 +60,7 @@ The `echo 'alias [ALIAS_NAME]="[COMMAND]"' >> ~/.zshrc` says "append to my shell
 </details>
 
 4. Create an alias to update the repository. 
-    * Run `echo 'alias lsat_update=“cd ~/Terminal-Games && git pull“’ >> ~/.zshrc` (if you have moved the target directory, renamed the cloned folder, or are using a different shell, adjust accordingly)
+    * Run `echo 'alias lsat_update="cd ~/Terminal-Games && git pull"' >> ~/.zshrc` (if you have moved the target directory, renamed the cloned folder, or are using a different shell, adjust accordingly)
 <details>
 <summary style="margin-left: 80px;"> What does this do? </summary>
 This alias: 
