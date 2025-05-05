@@ -1422,10 +1422,10 @@
             {
                 "question": "Which one of the following is mentioned in the passage as an example of the use of metaphor in corridos?",
                 "answers": [
+                    "cattle drives",
                     "mist",
                     "a cypress tree",
                     "a fight",
-                    "stampedes",
                     "stampedes"
                 ],
                 "label": 1,
@@ -1462,7 +1462,7 @@
                     "The corrido is unique among ballad forms because it uses language that is familiar mainly to local audiences.",
                     "Much of the imagery used in corridos can also be identified in ballads from Spain.",
                     "The reportorial capability of corridos was probably enhanced by their freedom from the constraints of rhymed ballad forms.",
-                    "A corrido without a surviving despedida would"
+                    "A corrido without a surviving despedida would probably still be identifiable as a corrido."
                 ],
                 "label": 4,
                 "id_string": "201212_1-RC_1_7"
