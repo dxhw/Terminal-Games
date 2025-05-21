@@ -378,14 +378,18 @@ def main():
     parser.add_argument("--scale", type=int, default=DEFAULT_SCALE, help=f"Cell size in pixels (default: {DEFAULT_SCALE})")
     parser.add_argument("--width", type=int, help="Grid width in tiles (default: based on difficulty)")
     parser.add_argument("--height", type=int, help="Grid height in tiles (default: based on difficulty)")
-    parser.add_argument("--difficulty", choices=["easy", "medium", "hard"], default="hard", help="Difficulty level: easy (10x10), medium (15x15), hard (20x20) (default: hard)")
+    parser.add_argument("--difficulty", choices=["baby", "easy", "medium", "hard"], default="hard", help="Difficulty level: baby (5x5), easy (10x10), medium (15x15), hard (20x20) (default: hard)")
     parser.add_argument("--density", type=int, help=f"Approximate percentage of filled tiles in solution — lower to increase difficulty (default: {DENSITY})")
-    parser.add_argument("--light", action='store_true', default=False, help="Include to default to light mode")
+    parser.add_argument("--dark", action='store_true', default=False, help="Include to default to dark mode")
 
     args = parser.parse_args()
 
     # Apply difficulty if width/height not specified
-    if args.difficulty == "easy":
+    if args.difficulty == "baby":
+        width, height = 5, 5
+        if args.scale == DEFAULT_SCALE: # change the scale so it's a bit less tiny
+            args.scale = 60
+    elif args.difficulty == "easy":
         width, height = 10, 10
     elif args.difficulty == "medium":
         width, height = 15, 15
@@ -397,7 +401,7 @@ def main():
     if args.height:
         height = args.height
     global IN_DARK_MODE
-    dark_mode(not(args.light))
+    dark_mode(args.dark)
     if args.density:
         DENSITY = args.density
 
