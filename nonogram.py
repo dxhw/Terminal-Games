@@ -58,7 +58,7 @@ def apply_symmetry_noise(row, noise_level):
 def generate_nonogram_board(width, height, density, symmetry_strength=1.0, symmetry_noise=0.0):
     board = [[0 for _ in range(width)] for _ in range(height)]
 
-    symmetry_type = random.choices(['none', 'horizontal', 'vertical', 'rotational'], weights=[0.1, 0.3, 0.3, 0.3])[0]
+    symmetry_type = random.choices(['none', 'horizontal', 'vertical', 'rotational'], weights=[0.05, 0.3, 0.3, 0.35])[0]
     
     for y in range(height):
         if symmetry_type in ['vertical', 'rotational']:
@@ -130,59 +130,54 @@ class Nonogram:
         if self.drag_history:
             self.user_board = self.drag_history.pop()
         self.check_correct()
+
+    def clear_board(self):
+        self.save_drag_state()
+        self.user_board = [['' for _ in range(self.width)] for _ in range(self.height)]
+        self.correct_count = 0
+        pygame.display.set_caption("Nonogram")
             
     def check_correct(self):
-        """Updates the number of filled tiles by the user, autofills flags for columns/rows with completed hints, and evaluates win condition."""
-        count = 0
-        selected = 0
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.user_board[y][x] == 'F':
-                    selected += 1
-                if self.solution[y][x] == 1 and self.user_board[y][x] == 'F':
-                    count += 1
+        """Updates the number of filled tiles, auto-flags completed rows/columns, and checks win condition."""
+        def extract_clues(line):
+            """Extract the clues that the users selections would match"""
+            groups = ''.join(['1' if cell == 'F' else '0' for cell in line]).split('0')
+            clues = [len(group) for group in groups if group]
+            return clues if clues else [0]
+
+        def autofill_line(line_idx, is_row=True):
+            """Flag remaining tiles in column/row with completed clues"""
+            # it's super lame to have the board autofill with x's for a 0 row/column, so ignore [0]
+            if is_row:
+                line = [self.user_board[line_idx][x] for x in range(self.width)]
+                clues_match = extract_clues(line) == self.get_row_clues()[line_idx]
+                if clues_match and extract_clues(line) != [0]: 
+                    for x in range(self.width):
+                        if self.user_board[line_idx][x] == '':
+                            self.user_board[line_idx][x] = 'X'
+                return clues_match
+            else:
+                line = [self.user_board[y][line_idx] for y in range(self.height)]
+                clues_match = extract_clues(line) == self.get_col_clues()[line_idx]
+                if clues_match and extract_clues(line) != [0]:
+                    for y in range(self.height):
+                        if self.user_board[y][line_idx] == '':
+                            self.user_board[y][line_idx] = 'X'
+                return clues_match
+
+        # Count correct selections
+        selected = sum(cell == 'F' for row in self.user_board for cell in row)
         self.correct_count = selected
 
-        # If all of the clues are fulfilled for a row/column, flag the rest of the line
-
-        matches_clues = True
-        # Flag remaining tiles in matched rows
-        for y in range(self.height):
-            # convert filled in tiles to set of clues
-            user_row = ''.join(['1' if self.user_board[y][x] == 'F' else '0' for x in range(self.width)]).split('0')
-            user_clues = [len(group) for group in user_row if group]
-            if user_clues == []:
-                user_clues = [0]
-            # check if generated clues based on user inputs match true clues
-            if user_clues == self.get_row_clues()[y]:
-                if user_clues != [0]: # it's super lame to have the board autofill with x's for a 0 row
-                    for x in range(self.width):
-                        if self.user_board[y][x] == '':
-                            self.user_board[y][x] = 'X'
-            else:
-                matches_clues = False
-
-        # Flag remaining tiles in matched columns
-        for x in range(self.width):
-            # convert filled in tiles to set of clues
-            user_col = ''.join(['1' if self.user_board[y][x] == 'F' else '0' for y in range(self.height)]).split('0')
-            user_clues = [len(group) for group in user_col if group]
-            if user_clues == []:
-                user_clues = [0]
-            # check if generated clues based on user inputs match true clues
-            if user_clues == self.get_col_clues()[x]:
-                if user_clues != [0]: # it's super lame to have the board autofill with x's for a 0 column
-                    for y in range(self.height):
-                        if self.user_board[y][x] == '':
-                            self.user_board[y][x] = 'X'
-            else: 
-                matches_clues = False
+        # Auto-fill matched rows and columns
+        rows_match = all([autofill_line(y, is_row=True) for y in range(self.height)])
+        cols_match = all([autofill_line(x, is_row=False) for x in range(self.width)])
 
         # Check win condition
         if selected == self.correct_total:
-            if not(matches_clues):
-                        pygame.display.set_caption("Error in solution. Try again!")
-                        return
+            if not (rows_match and cols_match):
+                pygame.display.set_caption("Error in solution. Try again!")
+                return
             pygame.display.set_caption("Success! Puzzle solved.")
 
     def get_row_clues(self):
@@ -327,7 +322,6 @@ def dark_mode(to_dark: bool):
 def help_screen(screen):
     help_text = [
     "Controls",
-    "----------------------------------------------------------",
     "Mouse:",
     "- Left-click: Fill tile",
     "- Right-click: Mark tile as empty",
@@ -336,7 +330,8 @@ def help_screen(screen):
     "- SPACE: Fill tile",
     "- X: Mark tile as empty",
     "- U: Undo last drag",
-    "- R: Reset board",
+    "- R: Restart game (new board)",
+    "- C: Clear board",
     "- H: Toggle this help menu",
     "- D: Toggle dark mode",
     "Complete when all filled tiles match the hidden pattern!",
@@ -349,6 +344,27 @@ def help_screen(screen):
     for i, line in enumerate(help_text):
         text = font.render(line, True, BLACK)
         screen.blit(text, (60, 20 + i * 30))
+
+def update_cell_value(current_value, key, mode):
+    """Determines the new correct cell value for a given cell based on its current value, the 
+    selected key, and the selected mode. 
+    Returns a tuple of the new value and a boolean representing if the cell was changed"""
+    if key == pygame.K_SPACE:
+        target = 'F'
+        other = 'X'
+    elif key == pygame.K_x:
+        target = 'X'
+        other = 'F'
+    else:
+        return (current_value, False)  # Return unchanged if unsupported key
+
+    if mode == 'overwrite':
+        return (target, True) if current_value == other else (current_value, False)
+    elif mode == 'deselect':
+        return ('', True) if current_value == target else (current_value, False)
+    elif mode == 'select':
+        return (target, True) if current_value == '' else (current_value, False)
+    return (current_value, False)
 
 
 def main():
@@ -380,9 +396,8 @@ def main():
         width = args.width
     if args.height:
         height = args.height
-    if args.light:
-        global IN_DARK_MODE
-        dark_mode(not(args.light))
+    global IN_DARK_MODE
+    dark_mode(not(args.light))
     if args.density:
         DENSITY = args.density
 
@@ -403,7 +418,7 @@ def main():
     dragging = False
     drag_key = None
     drag_axis = None  # 'col' or 'row'
-    drag_mode = None  # 'select' or 'deselect'
+    drag_mode = None  # 'select', 'deselect', or 'overwrite'
     drag_start = None
     help = False
     while running:
@@ -428,12 +443,25 @@ def main():
                     drag_start = (cell_x, cell_y)
                     drag_axis = None
                     if drag_key == pygame.K_SPACE:
-                        drag_mode = 'deselect' if game.user_board[cell_y][cell_x] == 'F' else 'select'
-                        game.user_board[cell_y][cell_x] = '' if game.user_board[cell_y][cell_x] == 'F' else 'F'
+                        selected_cell = game.user_board[cell_y][cell_x]
+                        if selected_cell == 'F':
+                            drag_mode = 'deselect'
+                        elif selected_cell == 'X':
+                            drag_mode = 'overwrite'
+                        else:
+                            drag_mode = 'select'
+                        game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_SPACE, drag_mode)
+                        if updated: game.check_correct()
                     elif drag_key == pygame.K_x:
-                        drag_mode = 'deselect' if game.user_board[cell_y][cell_x] == 'X' else 'select'
-                        game.user_board[cell_y][cell_x] = '' if game.user_board[cell_y][cell_x] == 'X' else 'X'
-                    game.check_correct()
+                        selected_cell = game.user_board[cell_y][cell_x]
+                        if selected_cell == 'X':
+                            drag_mode = 'deselect'
+                        elif selected_cell == 'F':
+                            drag_mode = 'overwrite'
+                        else:
+                            drag_mode = 'select'
+                        game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_x, drag_mode)
+                        if updated: game.check_correct()
                     
 
             elif event.type == pygame.KEYDOWN:
@@ -456,6 +484,8 @@ def main():
                     dark_mode(not(IN_DARK_MODE))
                 elif event.key == pygame.K_h:
                     help = True
+                elif event.key == pygame.K_c:
+                    game.clear_board()
                 elif event.key in (pygame.K_SPACE, pygame.K_x):
                     if 0 <= cell_x < game.width and 0 <= cell_y < game.height:
                         dragging = True
@@ -464,12 +494,25 @@ def main():
                         drag_start = (cell_x, cell_y)
                         drag_axis = None
                         if drag_key == pygame.K_SPACE:
-                            drag_mode = 'deselect' if game.user_board[cell_y][cell_x] == 'F' else 'select'
-                            game.user_board[cell_y][cell_x] = '' if game.user_board[cell_y][cell_x] == 'F' else 'F'
+                            selected_cell = game.user_board[cell_y][cell_x]
+                            if selected_cell == 'F':
+                                drag_mode = 'deselect'
+                            elif selected_cell == 'X':
+                                drag_mode = 'overwrite'
+                            else:
+                                drag_mode = 'select'
+                            game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_SPACE, drag_mode)
+                            if updated: game.check_correct()
                         elif drag_key == pygame.K_x:
-                            drag_mode = 'deselect' if game.user_board[cell_y][cell_x] == 'X' else 'select'
-                            game.user_board[cell_y][cell_x] = '' if game.user_board[cell_y][cell_x] == 'X' else 'X'
-                        game.check_correct()
+                            selected_cell = game.user_board[cell_y][cell_x]
+                            if selected_cell == 'X':
+                                drag_mode = 'deselect'
+                            elif selected_cell == 'F':
+                                drag_mode = 'overwrite'
+                            else:
+                                drag_mode = 'select'
+                            game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_x, drag_mode)
+                            if updated: game.check_correct()
 
         if help:
             help_screen(screen)
@@ -487,21 +530,18 @@ def main():
                         drag_axis = 'row'
                     else:
                         drag_axis = 'col'
-                
+
                 if drag_axis == 'row' and cell_y == drag_start_y:
                     for x in range(min(drag_start_x, cell_x), max(drag_start_x, cell_x) + 1):
-                        if drag_key == pygame.K_SPACE:
-                            game.user_board[drag_start_y][x] = '' if drag_mode == 'deselect' else 'F'
-                        elif drag_key == pygame.K_x:
-                            game.user_board[drag_start_y][x] = '' if drag_mode == 'deselect' else 'X'
-                    game.check_correct()
+                        current_val = game.user_board[drag_start_y][x]
+                        game.user_board[drag_start_y][x], updated = update_cell_value(current_val, drag_key, drag_mode)
+                    if updated: game.check_correct()
                 elif drag_axis == 'col' and cell_x == drag_start_x:
                     for y in range(min(drag_start_y, cell_y), max(drag_start_y, cell_y) + 1):
-                        if drag_key == pygame.K_SPACE:
-                            game.user_board[y][drag_start_x] = '' if drag_mode == 'deselect' else 'F'
-                        elif drag_key == pygame.K_x:
-                            game.user_board[y][drag_start_x] = '' if drag_mode == 'deselect' else 'X'
-                    game.check_correct()
+                        current_val = game.user_board[y][drag_start_x]
+                        game.user_board[y][drag_start_x], updated = update_cell_value(current_val, drag_key, drag_mode)
+                    if updated: game.check_correct()
+            
         else:
             dragging = False
             drag_key = None
