@@ -6,8 +6,9 @@ The programs are:
 * typer.py: A speed typing test
 * substrings.py: A bomb-party-like [(jklm.fun)](jklm.fun) game where you type words including substrings
 * lsat_test.py: An LSAT practice program for the logical reasoning and reading comprehension sections
-* minesweeper.py: Minesweeper mimicking most of the functionality of [(minesweeperonline.com)](minesweeperonline.com)
+* minesweeper.py: Minesweeper mimicking most of the functionality of [minesweeperonline.com](minesweeperonline.com)
 * 2048.py: 2048
+* nonogram.py: A nonogram game somewhat like [this website](https://www.puzzle-nonograms.com/).
 
 Dataset Sources:
 * Typer: [Project Gutenberg](https://www.gutenberg.org/)
@@ -20,6 +21,7 @@ Necessary packages:
 * LSAT Practice: curses
 * Minesweeper: pygame, argparse
 * 2048: pygame, argparse
+* Nonograms: pygame, argparse
 
 All games use match, case keywords, so they require python 3.10 at least
 
