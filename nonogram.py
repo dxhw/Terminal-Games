@@ -378,7 +378,7 @@ def main():
     parser.add_argument("--scale", type=int, default=DEFAULT_SCALE, help=f"Cell size in pixels (default: {DEFAULT_SCALE})")
     parser.add_argument("--width", type=int, help="Grid width in tiles (default: based on difficulty)")
     parser.add_argument("--height", type=int, help="Grid height in tiles (default: based on difficulty)")
-    parser.add_argument("--difficulty", choices=["baby", "easy", "medium", "hard"], default="hard", help="Difficulty level: baby (5x5), easy (10x10), medium (15x15), hard (20x20) (default: hard)")
+    parser.add_argument("--difficulty", choices=["baby", "easy", "medium", "hard"], default="medium", help="Difficulty level: baby (5x5), easy (10x10), medium (15x15), hard (20x20) (default: medium)")
     parser.add_argument("--density", type=int, help=f"Approximate percentage of filled tiles in solution — lower to increase difficulty (default: {DENSITY})")
     parser.add_argument("--dark", action='store_true', default=False, help="Include to default to dark mode")
 
