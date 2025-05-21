@@ -92,6 +92,11 @@ def generate_nonogram_board(width, height, density, symmetry_strength=1.0, symme
         else:
             board[sym_y] = generate_row(width, density)
 
+    if width == height:
+        if random.randint(0, 1) == 1:
+            # rotate board 90 degrees
+            # there's no vertical run bias, so all of the long runs are always horizontal otherwise
+            return [list(reversed(col)) for col in zip(*board)]
     return board
 
 
