@@ -308,13 +308,13 @@ def dark_mode(to_dark: bool):
     if to_dark:
         WHITE = (0, 0, 0)
         BLACK = (255, 255, 255)
-        BACKGROUND_COLOR = (20, 20, 20)
+        BACKGROUND_COLOR = (40, 40, 40)
         BLUE = (144,213,255)
         YELLOW = (245, 164, 0)
     else:
         WHITE = (255, 255, 255)
         BLACK = (0, 0, 0)
-        BACKGROUND_COLOR = (255, 255, 255)
+        BACKGROUND_COLOR = (200, 200, 200)
         BLUE = (0, 0, 255)
         YELLOW = (255, 255, 0)
     IN_DARK_MODE = to_dark
