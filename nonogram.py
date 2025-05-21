@@ -13,6 +13,7 @@ DEFAULT_SCALE = 25  # Default cell size
 DEFAULT_SIZE = DEFAULT_WIDTH
 CELL_SIZE = DEFAULT_SCALE
 MARGIN = 50        # Margin around the grid for clues
+DENSITY = 40
 
 # RGB Color definitions
 WHITE = (255, 255, 255)
@@ -25,6 +26,73 @@ YELLOW = (255, 255, 0)
 BORDER_COLOR = (50, 50, 50)
 IN_DARK_MODE = False
 
+
+def generate_row(length, density):
+    row = []
+    filled_prob = (density / 100) * (2/3)
+
+    max_run = max(1, int(length * 0.5))
+    one_run_weights = [i for i in range(1, max_run + 1)]
+    zero_run_weights = [max(1, max_run - i + 1) for i in range(1, max(2, max_run // 2 + 1))]
+
+    # weight to have longer runs because having lots of 1s in a row is not fun
+    while len(row) < length:
+        is_one_run = random.random() < filled_prob
+        if is_one_run:
+            run_length = random.choices(range(1, max_run + 1), weights=one_run_weights)[0]
+        else:
+            run_length = random.choices(range(1, max_run // 2 + 1), weights=zero_run_weights)[0]
+        run_length = min(run_length, length - len(row))
+        row.extend([1 if is_one_run else 0] * run_length)
+
+    return row
+
+def apply_symmetry_noise(row, noise_level):
+    # Flip a percentage of bits in the row
+    noisy_row = row.copy()
+    for i in range(len(noisy_row)):
+        if random.random() < noise_level:
+            noisy_row[i] ^= 1  # Flip 0 <-> 1
+    return noisy_row
+
+def generate_nonogram_board(width, height, density, symmetry_strength=1.0, symmetry_noise=0.0):
+    board = [[0 for _ in range(width)] for _ in range(height)]
+
+    symmetry_type = random.choices(['none', 'horizontal', 'vertical', 'rotational'], weights=[0.1, 0.3, 0.3, 0.3])[0]
+    
+    for y in range(height):
+        if symmetry_type in ['vertical', 'rotational']:
+            sym_y = height - 1 - y
+        else:
+            sym_y = y
+
+        if y > sym_y:
+            continue  # already filled from symmetry
+
+        row = generate_row(width, density)
+        board[y] = row
+
+        # Determine if we apply symmetry
+        if symmetry_type == 'none' or sym_y == y:
+            continue
+
+        if random.random() < symmetry_strength:
+            mirrored = row.copy()
+            if symmetry_type == 'horizontal':
+                mirrored = row[::-1]
+            elif symmetry_type == 'vertical':
+                mirrored = row.copy()
+            elif symmetry_type == 'rotational':
+                mirrored = row[::-1]
+            
+            # Apply noise
+            mirrored = apply_symmetry_noise(mirrored, symmetry_noise)
+
+            board[sym_y] = mirrored
+        else:
+            board[sym_y] = generate_row(width, density)
+
+    return board
 
 
 class Nonogram:
@@ -42,7 +110,7 @@ class Nonogram:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.solution = [[1 if random.random() < 0.75 else 0 for _ in range(width)] for _ in range(height)]
+        self.solution = generate_nonogram_board(width=width, height=height, density=DENSITY, symmetry_strength=0.8, symmetry_noise=0.05)
         self.user_board = [['' for _ in range(width)] for _ in range(height)]
         self.correct_total = sum(sum(row) for row in self.solution)
         self.correct_count = 0
@@ -72,34 +140,42 @@ class Nonogram:
 
         # If all of the clues are fulfilled for a row/column, flag the rest of the line
 
+        matches_clues = True
         # Flag remaining tiles in matched rows
         for y in range(self.height):
             # convert filled in tiles to set of clues
             user_row = ''.join(['1' if self.user_board[y][x] == 'F' else '0' for x in range(self.width)]).split('0')
             user_clues = [len(group) for group in user_row if group]
+            if user_clues == []:
+                user_clues = [0]
             # check if generated clues based on user inputs match true clues
             if user_clues == self.get_row_clues()[y]:
-                for x in range(self.width):
-                    if self.user_board[y][x] == '':
-                        self.user_board[y][x] = 'X'
+                if user_clues != [0]: # it's super lame to have the board autofill with x's for a 0 row
+                    for x in range(self.width):
+                        if self.user_board[y][x] == '':
+                            self.user_board[y][x] = 'X'
+            else:
+                matches_clues = False
 
         # Flag remaining tiles in matched columns
         for x in range(self.width):
             # convert filled in tiles to set of clues
             user_col = ''.join(['1' if self.user_board[y][x] == 'F' else '0' for y in range(self.height)]).split('0')
             user_clues = [len(group) for group in user_col if group]
+            if user_clues == []:
+                user_clues = [0]
             # check if generated clues based on user inputs match true clues
             if user_clues == self.get_col_clues()[x]:
-                for y in range(self.height):
-                    if self.user_board[y][x] == '':
-                        self.user_board[y][x] = 'X'
+                if user_clues != [0]: # it's super lame to have the board autofill with x's for a 0 column
+                    for y in range(self.height):
+                        if self.user_board[y][x] == '':
+                            self.user_board[y][x] = 'X'
+            else: 
+                matches_clues = False
 
         # Check win condition
         if selected == self.correct_total:
-            for y in range(self.height):
-                for x in range(self.width):
-                    if (self.solution[y][x] == 1 and self.user_board[y][x] != 'F') or \
-                       (self.solution[y][x] == 0 and self.user_board[y][x] == 'F'):
+            if not(matches_clues):
                         pygame.display.set_caption("Error in solution. Try again!")
                         return
             pygame.display.set_caption("Success! Puzzle solved.")
@@ -275,11 +351,14 @@ def main():
     Main function to initialize and run the Nonogram game loop.
     Handles event processing and updates the game state accordingly.
     """
+    global DENSITY
+
     parser = argparse.ArgumentParser(description="Run a Nonogram game with customizable grid, scale, and difficulty.")
     parser.add_argument("--scale", type=int, default=DEFAULT_SCALE, help=f"Cell size in pixels (default: {DEFAULT_SCALE})")
     parser.add_argument("--width", type=int, help="Grid width in tiles (default: based on difficulty)")
     parser.add_argument("--height", type=int, help="Grid height in tiles (default: based on difficulty)")
     parser.add_argument("--difficulty", choices=["easy", "medium", "hard"], default="hard", help="Difficulty level: easy (10x10), medium (15x15), hard (20x20) (default: hard)")
+    parser.add_argument("--density", type=int, help=f"Approximate percentage of filled tiles in solution — lower to increase difficulty (default: {DENSITY})")
     parser.add_argument("--light", action='store_true', default=False, help="Include to default to light mode")
 
     args = parser.parse_args()
@@ -299,6 +378,8 @@ def main():
     if args.light:
         global IN_DARK_MODE
         dark_mode(not(args.light))
+    if args.density:
+        DENSITY = args.density
 
 
     global CELL_SIZE
@@ -361,6 +442,7 @@ def main():
                     else:
                         break
                 if event.key == pygame.K_r:
+                    pygame.display.set_caption("Nonogram")
                     # restart
                     game = Nonogram(width, height) 
                 elif event.key == pygame.K_u:
