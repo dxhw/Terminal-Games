@@ -137,7 +137,7 @@ def handle_key_down(
     return drag_state, False
 
 
-def handle_dragging(game, drag_state: DragState) -> DragState:
+def handle_dragging(game: Nonogram, drag_state: DragState) -> DragState:
     cell_x, cell_y = get_mouse_cell()
     if 0 <= cell_x < game.width and 0 <= cell_y < game.height and drag_state.start:
         drag_start_x, drag_start_y = drag_state.start
@@ -151,22 +151,22 @@ def handle_dragging(game, drag_state: DragState) -> DragState:
                 else DragAxis.COL
             )
 
-        updated = False
         if drag_state.axis == DragAxis.ROW and cell_y == drag_start_y:
             for x in range(min(drag_start_x, cell_x), max(drag_start_x, cell_x) + 1):
                 current_val = game.user_board[drag_start_y][x]
                 game.user_board[drag_start_y][x], updated = update_cell_value(
                     current_val, drag_state.key, drag_state.mode
                 )
+                if updated:
+                    game.check_correct()
         elif drag_state.axis == DragAxis.COL and cell_x == drag_start_x:
             for y in range(min(drag_start_y, cell_y), max(drag_start_y, cell_y) + 1):
                 current_val = game.user_board[y][drag_start_x]
                 game.user_board[y][drag_start_x], updated = update_cell_value(
                     current_val, drag_state.key, drag_state.mode
                 )
-
-        if updated:
-            game.check_correct()
+                if updated:
+                    game.check_correct()
 
     # Keep dragging if key or button is still pressed
     keys = pygame.key.get_pressed()
