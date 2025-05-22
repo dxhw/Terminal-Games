@@ -26,6 +26,20 @@ YELLOW = (255, 255, 0)
 BORDER_COLOR = (50, 50, 50)
 IN_DARK_MODE = False
 
+class DragState:
+    def __init__(self):
+        self.dragging = False     # True or False (is dragging on)
+        self.key = None           # pygame.K_SPACE or pygame.K_x
+        self.start = None         # (x, y)
+        self.axis = None          # 'row' or 'col'
+        self.mode = None          # 'select', 'deselect', 'overwrite'
+
+    def reset(self):
+        self.dragging = False
+        self.key = None
+        self.start = None
+        self.axis = None
+        self.mode = None
 
 def generate_row(length, density):
     row = []
@@ -121,7 +135,14 @@ class Nonogram:
         self.correct_count = 0
         self.drag_history = []  # Stack to track drag history
 
-    
+    def restart(self):
+        self.solution = generate_nonogram_board(width=self.width, height=self.height, density=DENSITY, symmetry_strength=0.8, symmetry_noise=0.05)
+        self.user_board = [['' for _ in range(self.width)] for _ in range(self.height)]
+        self.correct_total = sum(sum(row) for row in self.solution)
+        self.correct_count = 0
+        self.drag_history = []  # Stack to track drag history
+        pygame.display.set_caption("Nonogram")
+
     def save_drag_state(self):
         # Deep copy current state to allow undo
         self.drag_history.append(copy.deepcopy(self.user_board))
@@ -222,7 +243,7 @@ class Nonogram:
             clues.append(clue or [0])
         return clues
 
-def draw_board(screen, game, drag_axis=None, drag_start=None, cell_x=None, cell_y=None):
+def draw_board(screen, game, drag_state: DragState = None):
     """
     Renders the game board, user input, clues, and the correct tile counter.
 
@@ -244,9 +265,10 @@ def draw_board(screen, game, drag_axis=None, drag_start=None, cell_x=None, cell_
     for y in range(game.height):
         for x in range(game.width):
             # Highlight drag path
-            if drag_axis == 'row' and drag_start and y == drag_start[1] and min(drag_start[0], cell_x) <= x <= max(drag_start[0], cell_x):
+            cell_x, cell_y = get_mouse_cell()
+            if drag_state.axis == 'row' and drag_state.start and y == drag_state.start[1] and min(drag_state.start[0], cell_x) <= x <= max(drag_state.start[0], cell_x):
                 highlight = True
-            elif drag_axis == 'col' and drag_start and x == drag_start[0] and min(drag_start[1], cell_y) <= y <= max(drag_start[1], cell_y):
+            elif drag_state.axis == 'col' and drag_state.start and x == drag_state.start[0] and min(drag_state.start[1], cell_y) <= y <= max(drag_state.start[1], cell_y):
                 highlight = True
             else:
                 highlight = False
@@ -366,14 +388,7 @@ def update_cell_value(current_value, key, mode):
         return (target, True) if current_value == '' else (current_value, False)
     return (current_value, False)
 
-
-def main():
-    """
-    Main function to initialize and run the Nonogram game loop.
-    Handles event processing and updates the game state accordingly.
-    """
-    global DENSITY
-
+def parse_args():
     parser = argparse.ArgumentParser(description="Run a Nonogram game with customizable grid, scale, and difficulty.")
     parser.add_argument("--scale", type=int, default=DEFAULT_SCALE, help=f"Cell size in pixels (default: {DEFAULT_SCALE})")
     parser.add_argument("--width", type=int, help="Grid width in tiles (default: based on difficulty)")
@@ -382,8 +397,9 @@ def main():
     parser.add_argument("--density", type=int, help=f"Approximate percentage of filled tiles in solution — lower to increase difficulty (default: {DENSITY})")
     parser.add_argument("--dark", action='store_true', default=False, help="Include to default to dark mode")
 
-    args = parser.parse_args()
+    return parser.parse_args()
 
+def initialize_game(args):
     # Apply difficulty if width/height not specified
     if args.difficulty == "baby":
         width, height = 5, 5
@@ -403,6 +419,7 @@ def main():
     global IN_DARK_MODE
     dark_mode(args.dark)
     if args.density:
+        global DENSITY
         DENSITY = args.density
 
 
@@ -416,146 +433,156 @@ def main():
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Nonogram")
 
+    return game, screen
+
+def get_mouse_cell():
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    cell_x = (mouse_x - (MARGIN + 120)) // CELL_SIZE
+    cell_y = (mouse_y - (MARGIN + 100)) // CELL_SIZE
+    return cell_x, cell_y
+
+def handle_event(event, game, drag_state, help_mode):
+    if help_mode: return drag_state, handle_help_event(event)
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        return handle_mouse_down(event, game, drag_state)
+    elif event.type == pygame.KEYDOWN:
+        return handle_key_down(event, game, drag_state)
+    return drag_state, help_mode
+
+def handle_help_event(event):
+    if event.type != pygame.KEYDOWN: return True
+    if event.key in (pygame.K_ESCAPE, pygame.K_h):
+        return False
+    elif event.key == pygame.K_d:
+        dark_mode(not IN_DARK_MODE)
+    return True
+
+def determine_drag_mode(selected_cell, drag_key):
+    if drag_key == pygame.K_SPACE:
+        if selected_cell == 'F':
+            return 'deselect'
+        elif selected_cell == 'X':
+            return 'overwrite'
+        else:
+            return 'select'
+    elif drag_key == pygame.K_x:
+        if selected_cell == 'X':
+            return 'deselect'
+        elif selected_cell == 'F':
+            return 'overwrite'
+        else:
+            return 'select'
+    else:
+        return None
+
+def handle_mouse_down(event, game, drag_state: DragState):
+    cell_x, cell_y = get_mouse_cell()
+    if not (0 <= cell_x < game.width and 0 <= cell_y < game.height):
+        drag_state.reset()
+        return False, drag_state, False
+    
+    drag_state.dragging = True
+    drag_state.key = pygame.K_SPACE if event.button == 1 else pygame.K_x
+    game.save_drag_state() # save state so that undo is possible
+    drag_state.start = (cell_x, cell_y)
+    drag_state.axis = None
+    selected_cell = game.user_board[cell_y][cell_x]
+    drag_state.mode = determine_drag_mode(selected_cell, drag_state.key)
+    game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, drag_state.key, drag_state.mode)
+    if updated: game.check_correct()
+    # last false means not in help mode
+    return drag_state, False 
+
+def handle_key_down(event, game, drag_state: DragState):
+    if event.key == pygame.K_h:
+        drag_state.reset()
+        return drag_state, True
+    
+    elif event.key == pygame.K_r:
+        game.restart()
+    elif event.key == pygame.K_u:
+        game.undo_drag()
+    elif event.key == pygame.K_d:
+        dark_mode(not(IN_DARK_MODE))
+    elif event.key == pygame.K_c:
+        game.clear_board()
+    elif event.key in (pygame.K_SPACE, pygame.K_x):
+        cell_x, cell_y = get_mouse_cell()
+        if 0 <= cell_x < game.width and 0 <= cell_y < game.height:
+            drag_state.dragging = True
+            drag_state.key = event.key
+            game.save_drag_state()
+            drag_state.start = (cell_x, cell_y)
+            drag_state.axis = None
+
+            selected_cell = game.user_board[cell_y][cell_x]
+            drag_state.mode = determine_drag_mode(selected_cell, drag_state.key)
+            game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, drag_state.key, drag_state.mode)
+            if updated: game.check_correct()
+    return drag_state, False
+
+def handle_dragging(game, drag_state: DragState):    
+    cell_x, cell_y = get_mouse_cell()
+    if 0 <= cell_x < game.width and 0 <= cell_y < game.height and drag_state.start:
+        drag_start_x, drag_start_y = drag_state.start
+        # determine axis of drag based on first movement
+        if drag_state.axis is None and (cell_x != drag_start_x or cell_y != drag_start_y):
+            drag_state.axis = 'row' if abs(cell_x - drag_start_x) >= abs(cell_y - drag_start_y) else 'col'
+
+        updated = False
+        if drag_state.axis == 'row' and cell_y == drag_start_y:
+            for x in range(min(drag_start_x, cell_x), max(drag_start_x, cell_x) + 1):
+                current_val = game.user_board[drag_start_y][x]
+                game.user_board[drag_start_y][x], updated = update_cell_value(current_val, drag_state.key, drag_state.mode)
+        elif drag_state.axis == 'col' and cell_x == drag_start_x:
+            for y in range(min(drag_start_y, cell_y), max(drag_start_y, cell_y) + 1):
+                current_val = game.user_board[y][drag_start_x]
+                game.user_board[y][drag_start_x], updated = update_cell_value(current_val, drag_state.key, drag_state.mode)
+        
+        if updated: game.check_correct()
+        
+    # Keep dragging if key or button is still pressed
+    keys = pygame.key.get_pressed()
+    mouse = pygame.mouse.get_pressed()
+    key_or_mouse_held = (keys[drag_state.key] if drag_state.key else False) or any(mouse)
+    if not(key_or_mouse_held): drag_state.reset()
+    return drag_state
+
+def game_loop(game, screen):
     clock = pygame.time.Clock()
 
     running = True
-    dragging = False
-    drag_key = None
-    drag_axis = None  # 'col' or 'row'
-    drag_mode = None  # 'select', 'deselect', or 'overwrite'
-    drag_start = None
-    help = False
+    drag_state = DragState()
+    help_mode = False
     while running:
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        cell_x = (mouse_x - (MARGIN + 120)) // CELL_SIZE
-        cell_y = (mouse_y - (MARGIN + 100)) // CELL_SIZE
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            else:
+                drag_state, help_mode = handle_event(event, game, drag_state, help_mode)
 
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if help:
-                    break
-                mouse_x, mouse_y = event.pos
-                cell_x = (mouse_x - (MARGIN + 120)) // CELL_SIZE
-                cell_y = (mouse_y - (MARGIN + 100)) // CELL_SIZE
-                if 0 <= cell_x < game.width and 0 <= cell_y < game.height:
-                    dragging = True
-                    drag_key = pygame.K_SPACE if event.button == 1 else pygame.K_x
-                    game.save_drag_state() # save state so that undo is possible
-                    drag_start = (cell_x, cell_y)
-                    drag_axis = None
-                    if drag_key == pygame.K_SPACE:
-                        selected_cell = game.user_board[cell_y][cell_x]
-                        if selected_cell == 'F':
-                            drag_mode = 'deselect'
-                        elif selected_cell == 'X':
-                            drag_mode = 'overwrite'
-                        else:
-                            drag_mode = 'select'
-                        game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_SPACE, drag_mode)
-                        if updated: game.check_correct()
-                    elif drag_key == pygame.K_x:
-                        selected_cell = game.user_board[cell_y][cell_x]
-                        if selected_cell == 'X':
-                            drag_mode = 'deselect'
-                        elif selected_cell == 'F':
-                            drag_mode = 'overwrite'
-                        else:
-                            drag_mode = 'select'
-                        game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_x, drag_mode)
-                        if updated: game.check_correct()
-                    
-
-            elif event.type == pygame.KEYDOWN:
-                if help:
-                    if event.key == pygame.K_ESCAPE or event.key == pygame.K_h:
-                        help = False
-                        break
-                    elif event.key == pygame.K_d:
-                        dark_mode(not(IN_DARK_MODE))
-                        break
-                    else:
-                        break
-                if event.key == pygame.K_r:
-                    pygame.display.set_caption("Nonogram")
-                    # restart
-                    game = Nonogram(width, height) 
-                elif event.key == pygame.K_u:
-                    game.undo_drag()
-                elif event.key == pygame.K_d:
-                    dark_mode(not(IN_DARK_MODE))
-                elif event.key == pygame.K_h:
-                    help = True
-                elif event.key == pygame.K_c:
-                    game.clear_board()
-                elif event.key in (pygame.K_SPACE, pygame.K_x):
-                    if 0 <= cell_x < game.width and 0 <= cell_y < game.height:
-                        dragging = True
-                        drag_key = event.key
-                        game.save_drag_state()
-                        drag_start = (cell_x, cell_y)
-                        drag_axis = None
-                        if drag_key == pygame.K_SPACE:
-                            selected_cell = game.user_board[cell_y][cell_x]
-                            if selected_cell == 'F':
-                                drag_mode = 'deselect'
-                            elif selected_cell == 'X':
-                                drag_mode = 'overwrite'
-                            else:
-                                drag_mode = 'select'
-                            game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_SPACE, drag_mode)
-                            if updated: game.check_correct()
-                        elif drag_key == pygame.K_x:
-                            selected_cell = game.user_board[cell_y][cell_x]
-                            if selected_cell == 'X':
-                                drag_mode = 'deselect'
-                            elif selected_cell == 'F':
-                                drag_mode = 'overwrite'
-                            else:
-                                drag_mode = 'select'
-                            game.user_board[cell_y][cell_x], updated = update_cell_value(selected_cell, pygame.K_x, drag_mode)
-                            if updated: game.check_correct()
-
-        if help:
+        if help_mode:
             help_screen(screen)
         else:   
-            draw_board(screen, game, drag_axis, drag_start, cell_x, cell_y)
+            draw_board(screen, game, drag_state)
         pygame.display.flip()
-        
-        # Handle dragging
-        if dragging and ((drag_key in (pygame.K_SPACE, pygame.K_x) and pygame.key.get_pressed()[drag_key]) or any(pygame.mouse.get_pressed())):
-            if 0 <= cell_x < game.width and 0 <= cell_y < game.height and drag_start:
-                drag_start_x, drag_start_y = drag_start
-                # determine axis of drag based on first movement
-                if drag_axis is None and (cell_x != drag_start_x or cell_y != drag_start_y):
-                    if abs(cell_x - drag_start_x) >= abs(cell_y - drag_start_y):
-                        drag_axis = 'row'
-                    else:
-                        drag_axis = 'col'
 
-                if drag_axis == 'row' and cell_y == drag_start_y:
-                    for x in range(min(drag_start_x, cell_x), max(drag_start_x, cell_x) + 1):
-                        current_val = game.user_board[drag_start_y][x]
-                        game.user_board[drag_start_y][x], updated = update_cell_value(current_val, drag_key, drag_mode)
-                    if updated: game.check_correct()
-                elif drag_axis == 'col' and cell_x == drag_start_x:
-                    for y in range(min(drag_start_y, cell_y), max(drag_start_y, cell_y) + 1):
-                        current_val = game.user_board[y][drag_start_x]
-                        game.user_board[y][drag_start_x], updated = update_cell_value(current_val, drag_key, drag_mode)
-                    if updated: game.check_correct()
-            
-        else:
-            dragging = False
-            drag_key = None
-            drag_axis = None
-            drag_start = None
+        if drag_state.dragging: 
+            drag_state = handle_dragging(game, drag_state)
 
         clock.tick(30)
 
     pygame.quit()
     sys.exit()
+
+def main():
+    """
+    Main function to initialize and run the Nonogram game loop.
+    Handles event processing and updates the game state accordingly.
+    """
+    args = parse_args()
+    game, screen = initialize_game(args)
+    game_loop(game, screen)
 
 if __name__ == "__main__":
     main()
