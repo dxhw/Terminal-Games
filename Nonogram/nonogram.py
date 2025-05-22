@@ -2,14 +2,12 @@
 
 from game.constants import MARGIN, DEFAULT_SCALE, DEFAULT_DENSITY, DragState
 from game.events import handle_event, handle_dragging
-from game.draw import draw_board, help_screen, dark_mode
+from game.draw import draw_board, help_screen, dark_mode, update_cell_size
 from game.board import Nonogram
 
 import pygame
 import sys
 import argparse
-
-CELL_SIZE = DEFAULT_SCALE
 
 
 def parse_args():
@@ -70,13 +68,13 @@ def initialize_game(args):
     dark_mode(args.dark)
     density = args.density
 
-    global CELL_SIZE
-    CELL_SIZE = args.scale
+    cell_size = args.scale
+    update_cell_size(scale=cell_size)
 
     pygame.init()
     game = Nonogram(width, height, density)
-    screen_width = width * CELL_SIZE + MARGIN * 2 + 150
-    screen_height = height * CELL_SIZE + MARGIN * 2 + 120
+    screen_width = width * cell_size + MARGIN * 2 + 150
+    screen_height = height * cell_size + MARGIN * 2 + 120
     screen = pygame.display.set_mode((screen_width, screen_height))
     pygame.display.set_caption("Nonogram")
 

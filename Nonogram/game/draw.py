@@ -1,7 +1,6 @@
 import pygame
 from game.board import Nonogram
 from game.constants import * 
-from game.util import get_mouse_cell
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -9,7 +8,25 @@ BACKGROUND_COLOR = (200, 200, 200)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 IN_DARK_MODE = False
+CELL_SIZE = DEFAULT_SCALE
 
+def update_cell_size(scale: int = None, increase=False, decrease=False):
+    global CELL_SIZE
+    if scale:
+        CELL_SIZE = scale
+        return
+    if increase:
+        CELL_SIZE += 1
+        return
+    if decrease:
+        CELL_SIZE -= 1
+        return
+
+def get_mouse_cell() -> tuple[int, int]:
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    cell_x = (mouse_x - (MARGIN + 120)) // CELL_SIZE
+    cell_y = (mouse_y - (MARGIN + 100)) // CELL_SIZE
+    return cell_x, cell_y
 
 def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState = None):
     """
@@ -152,6 +169,8 @@ def help_screen(screen: pygame.Surface):
         "- Right-click: Mark tile as empty",
         "- Drag to fill/cross multiple tiles within one row/column",
         "Keyboard:",
+        "- MINUS: Reduce cell/font size",
+        "- EQUALS: Increase cell/font size",
         "- SPACE: Fill tile",
         "- X: Mark tile as empty",
         "- U: Undo last drag",
@@ -166,8 +185,11 @@ def help_screen(screen: pygame.Surface):
     help_bg.fill(WHITE)
     screen.blit(help_bg, (0, 0))
     font = pygame.font.SysFont(
-        "Arial", int(min(screen.get_width(), screen.get_height()) * 0.03)
+        "Arial", int(CELL_SIZE * 3 / 4)
     )
+    top_bottom_margin = 20
+    help_text_length = len(help_text)
+    space_between_lines = int((screen.get_height() - top_bottom_margin) / help_text_length)
     for i, line in enumerate(help_text):
         text = font.render(line, True, BLACK)
-        screen.blit(text, (60, 20 + i * 30))
+        screen.blit(text, (20, 10 + i * space_between_lines))

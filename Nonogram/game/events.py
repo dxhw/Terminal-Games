@@ -1,8 +1,7 @@
 import pygame
-from game.draw import dark_mode
+from game.draw import dark_mode, get_mouse_cell, update_cell_size
 from game.constants import DragState, CellState, DragMode, DragAxis
 from game.board import Nonogram
-from game.util import get_mouse_cell
 
 
 def update_cell_value(
@@ -57,6 +56,10 @@ def handle_help_event(event: pygame.event) -> bool:
         return False
     elif event.key == pygame.K_d:
         dark_mode()
+    elif event.key == pygame.K_EQUALS:
+        update_cell_size(increase=True)
+    elif event.key == pygame.K_MINUS:
+        update_cell_size(decrease=True)
     return True
 
 
@@ -118,6 +121,10 @@ def handle_key_down(
         dark_mode()
     elif event.key == pygame.K_c:
         game.clear_board()
+    elif event.key == pygame.K_EQUALS:
+        update_cell_size(increase=True)
+    elif event.key == pygame.K_MINUS:
+        update_cell_size(decrease=True)
     elif event.key in (pygame.K_SPACE, pygame.K_x):
         cell_x, cell_y = get_mouse_cell()
         if 0 <= cell_x < game.width and 0 <= cell_y < game.height:

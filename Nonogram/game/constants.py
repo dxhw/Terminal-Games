@@ -39,7 +39,6 @@ DEFAULT_WIDTH = 20  # Default board width
 DEFAULT_HEIGHT = 20  # Default board height
 DEFAULT_SCALE = 25  # Default cell size
 DEFAULT_SIZE = DEFAULT_WIDTH
-CELL_SIZE = DEFAULT_SCALE
 MARGIN = 50  # Margin around the grid for clues
 DEFAULT_DENSITY = 40
 
