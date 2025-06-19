@@ -121,6 +121,8 @@ def handle_key_down(
         dark_mode()
     elif event.key == pygame.K_c:
         game.clear_board()
+    elif event.key == pygame.K_a:
+        game.autoflag = not(game.autoflag)
     elif event.key == pygame.K_EQUALS:
         update_cell_size(increase=True)
     elif event.key == pygame.K_MINUS:

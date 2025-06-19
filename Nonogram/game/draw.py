@@ -132,14 +132,25 @@ def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState = N
     screen.blit(counter_text, (counter_bg.x + 10, counter_bg.y + 5))
 
     # Draw "Press H for help" prompt
-    prompt_font = font
-    prompt_text = prompt_font.render("Press H for help", True, (255, 255, 255))
-    prompt_bg = pygame.Rect(
-        10, screen.get_height() - 30, prompt_text.get_width() + 20, 24
+    help_prompt_font = font
+    help_prompt_text = help_prompt_font.render("Press H for help", True, (255, 255, 255))
+    help_prompt_bg = pygame.Rect(
+        10, screen.get_height() - 30, help_prompt_text.get_width() + 20, help_prompt_text.get_height() + 10
     )
-    pygame.draw.rect(screen, (50, 50, 50), prompt_bg, border_radius=5)
-    pygame.draw.rect(screen, (200, 200, 200), prompt_bg, 1, border_radius=5)
-    screen.blit(prompt_text, (prompt_bg.x + 10, prompt_bg.y + 4))
+    pygame.draw.rect(screen, (50, 50, 50), help_prompt_bg, border_radius=5)
+    pygame.draw.rect(screen, (200, 200, 200), help_prompt_bg, 1, border_radius=5)
+    screen.blit(help_prompt_text, (help_prompt_bg.x + 10, help_prompt_bg.y + 4))
+
+    # Draw auto flag on/off box
+    autoflag_prompt_font = font
+    autoflag_state = "on" if game.autoflag else "off"
+    autoflag_prompt_text = autoflag_prompt_font.render("Auto flag " + autoflag_state, True, (255, 255, 255))
+    autoflag_prompt_bg = pygame.Rect(
+        help_prompt_text.get_width() * 1.4 , screen.get_height() - 30, help_prompt_text.get_width() - 3, help_prompt_text.get_height() + 10
+    )
+    pygame.draw.rect(screen, (50, 50, 50), autoflag_prompt_bg, border_radius=5)
+    pygame.draw.rect(screen, (200, 200, 200), autoflag_prompt_bg, 1, border_radius=5)
+    screen.blit(autoflag_prompt_text, (autoflag_prompt_bg.x + 10, autoflag_prompt_bg.y + 4))
 
 
 def dark_mode(to_dark: bool = None):
@@ -178,6 +189,7 @@ def help_screen(screen: pygame.Surface):
         "- C: Clear board",
         "- H: Toggle this help menu",
         "- D: Toggle dark mode",
+        "- A: Toggle auto flag when line matches hints",
         "Complete when all filled tiles match the hidden pattern!",
         "Press ESC or 'H' to exit this help screen!",
     ]

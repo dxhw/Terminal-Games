@@ -16,6 +16,7 @@ class Nonogram:
         user_board (list[list[CellState]]): Player's input (CellState.FILLED for filled, CellState.CROSSED for decoy, CellState.EMPTY for empty).
         correct_total (int): Total number of correct tiles in the solution.
         correct_count (int): Number of correct tiles marked by the user.
+        autoflag (bool): Controls if lines are autofilled with X's when the clues are met
     """
 
     def __init__(self, width: int, height: int, density: int):
@@ -35,6 +36,7 @@ class Nonogram:
         self.correct_total = sum(sum(row) for row in self.solution)
         self.correct_count = 0
         self.drag_history = []  # Stack to track drag history
+        self.autoflag = True
 
     def restart(self):
         self.solution = generate_nonogram_board(
@@ -111,8 +113,9 @@ class Nonogram:
         self.correct_count = selected
 
         # Auto-fill matched rows and columns
-        rows_match = all([autofill_line(y, is_row=True) for y in range(self.height)])
-        cols_match = all([autofill_line(x, is_row=False) for x in range(self.width)])
+        if self.autoflag:
+            rows_match = all([autofill_line(y, is_row=True) for y in range(self.height)])
+            cols_match = all([autofill_line(x, is_row=False) for x in range(self.width)])
 
         # Check win condition
         if selected == self.correct_total:
