@@ -1,13 +1,12 @@
-#!/Library/Frameworks/Python.framework/Versions/3.10/bin/python3
-
 import json
 import random
 import curses
+import pathlib
 
-QUESTION_PATH = "LSAT_DATA/"
-LR_PATH = QUESTION_PATH + "all_lr.json"
-RC_PATH = QUESTION_PATH + "all_rc.json"
-AR_PATH = QUESTION_PATH + "all_ar.json"
+QUESTION_PATH = pathlib.Path("LSAT_DATA")
+LR_PATH = QUESTION_PATH / "all_lr.json"
+RC_PATH = QUESTION_PATH / "all_rc.json"
+AR_PATH = QUESTION_PATH / "all_ar.json"
 
 ##### Utils for loading questions #######
 def load_full_test_questions():

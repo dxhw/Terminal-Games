@@ -1,5 +1,3 @@
-#!/Library/Frameworks/Python.framework/Versions/3.10/bin/python3
-
 import curses
 from util import load_questions, wrapping_text
 from full_test import run_section_test, full_test
@@ -95,30 +93,22 @@ def welcome_screen(stdscr):
     default_time_limit = 20000 #80
     is_test = True
     not_test = False
-    match chosen_option:
-        case 0:
-            return "LR", not_test, default_time_limit, hide_timer
-        case 1:
-            return "RC", not_test, default_time_limit, hide_timer
-        case 2:
-            return "LR", not_test, 80, hide_timer # 80 seconds per LR question
-        case 3:
-            return "RC", not_test, 480, hide_timer # 8 minutes per RC passage
-        case 4:
-            return "LR", is_test, 35 * 60, hide_timer # 35 minutes
-        case 5:
-            return "RC", is_test, 35 * 60, hide_timer # 35 minutes
-        case 6:
-            return "LR", is_test, default_time_limit, hide_timer
-        case 7:
-            return "RC", is_test, default_time_limit, hide_timer
-        case 8:
-            return "FULL", is_test, 35 * 60, hide_timer
-        case 9:
-            return "FULL", is_test, default_time_limit, hide_timer
-        case 100:
-            return "AR", is_test, default_time_limit, hide_timer
-        # add new options here
+    options = {
+    0: ("LR", not_test, default_time_limit, hide_timer),
+    1: ("RC", not_test, default_time_limit, hide_timer),
+    2: ("LR", not_test, 80, hide_timer),         # 80 seconds per LR question
+    3: ("RC", not_test, 480, hide_timer),        # 8 minutes per RC passage
+    4: ("LR", is_test, 35 * 60, hide_timer),     # 35 minutes
+    5: ("RC", is_test, 35 * 60, hide_timer),     # 35 minutes
+    6: ("LR", is_test, default_time_limit, hide_timer),
+    7: ("RC", is_test, default_time_limit, hide_timer),
+    8: ("FULL", is_test, 35 * 60, hide_timer),
+    9: ("FULL", is_test, default_time_limit, hide_timer),
+    100: ("AR", is_test, default_time_limit, hide_timer),
+    # add new options here
+    }
+
+    return options.get(chosen_option)
 
 # Entry point
 if __name__ == "__main__":

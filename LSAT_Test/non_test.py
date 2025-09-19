@@ -1,5 +1,3 @@
-#!/Library/Frameworks/Python.framework/Versions/3.10/bin/python3
-
 import curses
 import time
 from util import wrapping_text, dark_colors, invert_colors
