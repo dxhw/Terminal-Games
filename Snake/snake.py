@@ -95,9 +95,32 @@ def draw_game_over():
     text = font.render("GAME OVER - (R)estart", True, RED)
     screen.blit(text, (WINDOW_WIDTH // 2 - text.get_width() // 2, 10))
 
+def move_snake(direction, snake, food_pos):
+    game_over = False
+    new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
+
+    if (
+        new_head[0] <= 0 or new_head[0] >= GRID_WIDTH - 1 or
+        new_head[1] <= 0 or new_head[1] >= GRID_HEIGHT - 1 or
+        new_head in snake
+    ):
+        game_over = True
+
+    got_food = False
+    if not game_over:
+        snake.insert(0, new_head)
+        if new_head == food_pos:
+            got_food = True
+        else:
+            snake.pop()
+    return got_food, game_over
+
+
 def game_loop(snake, direction, food_pos, score):
     moving = False
+    move_by_key = False
     game_over = False
+    got_food = False
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -115,29 +138,22 @@ def game_loop(snake, direction, food_pos, score):
                         direction = LEFT
                     elif (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and direction != LEFT:
                         direction = RIGHT
+                    got_food, game_over = move_snake(direction, snake, food_pos)
+                    move_by_key = True
                 if (event.key == pygame.K_r):
                     return True
                 elif (event.key == pygame.K_ESCAPE):
                     return False
 
         if moving:
-            new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
-
-            if (
-                new_head[0] <= 0 or new_head[0] >= GRID_WIDTH - 1 or
-                new_head[1] <= 0 or new_head[1] >= GRID_HEIGHT - 1 or
-                new_head in snake
-            ):
-                game_over = True
-
-            if not game_over:
-                snake.insert(0, new_head)
-                if new_head == food_pos:
-                    score += 1
-                    food_pos = random_food_position(snake)
-                    rainbow_color = make_rainbow_color()
-                else:
-                    snake.pop()
+            if not move_by_key:
+                got_food, game_over = move_snake(direction, snake, food_pos)
+            else:
+                move_by_key = False
+            if got_food:
+                score += 1
+                food_pos = random_food_position(snake)
+                rainbow_color = make_rainbow_color()
 
         # Draw everything
         screen.fill(BLACK)
