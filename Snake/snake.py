@@ -10,7 +10,7 @@ pygame.init()
 CELL_SIZE = 20
 GRID_WIDTH = 30
 GRID_HEIGHT = 20
-SCORE_AREA_HEIGHT = 40  # <--- extra space above play area
+SCORE_AREA_HEIGHT = 40
 WINDOW_WIDTH = CELL_SIZE * GRID_WIDTH
 WINDOW_HEIGHT = CELL_SIZE * GRID_HEIGHT + SCORE_AREA_HEIGHT
 FPS = 10
@@ -27,11 +27,6 @@ RIGHT = (1, 0)
 LEFT = (-1, 0)
 UP = (0, 1)
 DOWN = (0, -1)
-
-# Game finish states
-RESTART = "restart"
-GAME_OVER = "game over"
-EXIT = "exit"
 
 # Set up display
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -167,7 +162,7 @@ def game_loop(snake, direction, food_pos, score):
         g = min(255, (score + 5) * 20)
         b = min(255, max(0, (score - 12) * 20))
         snake_color = (r, g, b)
-        if r == g == b == 255:
+        if snake_color == WHITE:
             snake_color = rainbow_color
 
         draw_snake(snake, snake_color)

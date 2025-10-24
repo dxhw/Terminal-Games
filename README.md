@@ -9,6 +9,7 @@ The programs are:
 * minesweeper.py: Minesweeper mimicking most of the functionality of [minesweeperonline.com](minesweeperonline.com)
 * 2048.py: 2048
 * nonogram.py: A nonogram game somewhat like [this website](https://www.puzzle-nonograms.com/).
+* snake.py: Snake
 
 Dataset Sources:
 * Typer: [Project Gutenberg](https://www.gutenberg.org/)
@@ -22,6 +23,7 @@ Necessary packages:
 * Minesweeper: pygame, argparse
 * 2048: pygame, argparse
 * Nonograms: pygame, argparse
+* Snake: pygame
 
 All games use match, case keywords, so they require python 3.10 at least
 
