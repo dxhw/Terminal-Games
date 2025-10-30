@@ -102,7 +102,7 @@ def defaults():
     snake = [(5, 5), (4, 5), (3, 5)]
     direction = RIGHT
     food_pos = random_food_position(snake)
-    score = 15
+    score = 0
     if PORTALS_ON:
         portal_entry = random_portal_position(snake, food_pos)
         portal_exit = random_portal_position(snake, food_pos, portal_entry)
