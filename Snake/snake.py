@@ -3,17 +3,28 @@
 import pygame
 import sys
 import random
+import argparse
 
-pygame.init()
+parser = argparse.ArgumentParser(description="This program runs the game Snake! Please put in additional parameters to customize your game")
+parser.add_argument('-scale', dest='cell_size', help="the scale of your screen, default is 20", default=20, type=int)
+parser.add_argument("-height", dest="g_height", help="height to be used for the board, default 20", default=20, type=int)
+parser.add_argument("-width", dest="g_width", help="width to be used for the board, default 30", default=30, type=int)
+parser.add_argument("-speed", dest="speed", help="the speed of the game (in FPS), default is 10", default=10, type=int)
+
+args = parser.parse_args()
 
 # --- Game Constants ---
-CELL_SIZE = 20
-GRID_WIDTH = 30
-GRID_HEIGHT = 20
-SCORE_AREA_HEIGHT = 40
+CELL_SIZE = args.cell_size
+GRID_WIDTH = args.g_width
+GRID_HEIGHT = args.g_height
+SCORE_AREA_HEIGHT = CELL_SIZE * 2
 WINDOW_WIDTH = CELL_SIZE * GRID_WIDTH
 WINDOW_HEIGHT = CELL_SIZE * GRID_HEIGHT + SCORE_AREA_HEIGHT
-FPS = 10
+FPS = args.speed
+
+# Validation logic for custom game size
+if CELL_SIZE <= 0 or GRID_WIDTH <= 0 or GRID_HEIGHT <= 0 or FPS <= 0:
+    parser.error("scale, height, width, and speed must be positive integers.")
 
 # Colors
 BLACK = (0, 0, 0)
@@ -27,6 +38,8 @@ RIGHT = (1, 0)
 LEFT = (-1, 0)
 UP = (0, 1)
 DOWN = (0, -1)
+
+pygame.init()
 
 # Set up display
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
