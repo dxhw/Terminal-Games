@@ -100,7 +100,7 @@ def calculate_wpm(start_time, end_time, typed_characters):
     return round(wpm)
 
 def start_screen(stdscr):
-    stdscr.clear()
+    stdscr.erase()
     try:
         stdscr.addstr("Welcome to the typing test")
     except:
@@ -113,7 +113,7 @@ def start_screen(stdscr):
     return get_file(stdscr)
 
 def get_file(stdscr):
-    stdscr.clear()
+    stdscr.erase()
     file_name = ""
     char = ''
     try:
@@ -131,7 +131,7 @@ def get_file(stdscr):
     while (char := stdscr.getkey()) != '\n':
         if ord(char) == 27 or ord(char) == 3:
             return None
-        stdscr.clear()
+        stdscr.erase()
         try:
             stdscr.addstr("Please enter the file you'd like to type\nor type \"random\" if you would like a random text!\n")
         except:
@@ -151,7 +151,7 @@ def get_file(stdscr):
         stdscr.addstr(7, 0, file_name)
     if file_name == "":
         return load_text("")
-    stdscr.clear()
+    stdscr.erase()
     try:
         stdscr.addstr("Would you like capital letters? [[y]/n]\n")
     except:
@@ -163,7 +163,7 @@ def get_file(stdscr):
         return None
     cap = True if ord(key) == 121 else False
     target_text = load_text(file_name, cap)
-    stdscr.clear()
+    stdscr.erase()
 
     return target_text
 
@@ -276,7 +276,7 @@ def wpm_test(stdscr, target):
     while True:
         wpm = calculate_wpm(start_time, time.time(), len(current_text))
 
-        stdscr.clear()
+        stdscr.erase()
         if display_text(stdscr, target, current_text, wpm) == -1:
             stdscr.nodelay(False)
             return -1
