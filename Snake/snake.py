@@ -4,6 +4,8 @@ import pygame
 import sys
 import random
 import argparse
+from constants import *
+from snake_ai import simple_ai_direction_chooser
 
 parser = argparse.ArgumentParser(description="This program runs the game Snake! Please put in additional parameters to customize your game")
 parser.add_argument('-scale', dest='cell_size', help="the scale of your screen, default is 20", default=20, type=int)
@@ -11,6 +13,7 @@ parser.add_argument("-height", dest="g_height", help="height to be used for the 
 parser.add_argument("-width", dest="g_width", help="width to be used for the board, default 30", default=30, type=int)
 parser.add_argument("-speed", dest="speed", help="the speed of the game (in FPS), default is 10", default=10, type=int)
 parser.add_argument("-portals", action="store_true", help="include this flag to play with portals!")
+parser.add_argument("-ai", action="store_true", help="include this flag to play with an AI snake!")
 
 args = parser.parse_args()
 
@@ -22,25 +25,12 @@ SCORE_AREA_HEIGHT = CELL_SIZE * 2
 WINDOW_WIDTH = CELL_SIZE * GRID_WIDTH
 WINDOW_HEIGHT = CELL_SIZE * GRID_HEIGHT + SCORE_AREA_HEIGHT
 PORTALS_ON = args.portals
+AI_ON = args.ai
 FPS = args.speed
 
 # Validation logic for custom game size
 if CELL_SIZE <= 0 or GRID_WIDTH <= 0 or GRID_HEIGHT <= 0 or FPS <= 0:
     parser.error("scale, height, width, and speed must be positive integers.")
-
-# Colors
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
-RED = (220, 0, 0)
-WHITE = (255, 255, 255)
-GREY = (40, 40, 40)
-PURPLE = (138,43,226)
-
-# Directions
-RIGHT = (1, 0)
-LEFT = (-1, 0)
-UP = (0, 1)
-DOWN = (0, -1)
 
 pygame.init()
 
@@ -52,20 +42,18 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont("arial", 24)
 
 # --- Snake and Food Setup ---
-def random_food_position(snake):
+def random_food_position(snake, other_unallowed=[]):
     while True:
         pos = (random.randint(1, GRID_WIDTH - 2), random.randint(1, GRID_HEIGHT - 2))
-        if pos not in snake:
+        if pos not in snake and pos not in other_unallowed:
             return pos
 
-def random_portal_position(snake, food_pos, entry_pos=None):
-    while True:
+def random_empty_position(snake, food_pos, other_unallowed = []):
+    found_pos = False
+    while not found_pos:
         pos = (random.randint(2, GRID_WIDTH - 3), random.randint(2, GRID_HEIGHT - 3))
-        if pos not in snake and pos not in food_pos:
-            if entry_pos and pos not in entry_pos:
-                return pos
-            else:
-                return pos
+        found_pos = pos not in snake and pos != food_pos and pos not in other_unallowed
+    return pos
 
 def draw_cell(position, color):
     """Draw a square cell, offset by SCORE_AREA_HEIGHT."""
@@ -103,11 +91,17 @@ def defaults():
     direction = RIGHT
     food_pos = random_food_position(snake)
     score = 0
+    portal_entry = None
+    portal_exit = None
+    ai_snake = []
+    ai_direction = None
     if PORTALS_ON:
-        portal_entry = random_portal_position(snake, food_pos)
-        portal_exit = random_portal_position(snake, food_pos, portal_entry)
-        return snake, direction, food_pos, score, portal_entry, portal_exit
-    return snake, direction, food_pos, score
+        portal_entry = random_empty_position(snake, food_pos)
+        portal_exit = random_empty_position(snake, food_pos, [portal_entry])
+    if AI_ON:
+        ai_snake = [random_empty_position(snake, food_pos, [portal_entry, portal_exit])]
+        ai_direction = RIGHT
+    return snake, direction, food_pos, score, portal_entry, portal_exit, ai_snake, ai_direction
 
 def make_rainbow_color():
     r = random.randint(0, 255)
@@ -122,7 +116,7 @@ def draw_game_over():
     text = font.render("GAME OVER - (R)estart", True, RED)
     screen.blit(text, (WINDOW_WIDTH // 2 - text.get_width() // 2, 10))
 
-def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None):
+def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, other_snake=[]):
     game_over = False
     new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
     if PORTALS_ON:
@@ -136,7 +130,7 @@ def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None):
     if (
         new_head[0] <= 0 or new_head[0] >= GRID_WIDTH - 1 or
         new_head[1] <= 0 or new_head[1] >= GRID_HEIGHT - 1 or
-        new_head in snake
+        new_head in snake or new_head in other_snake
     ):
         game_over = True
 
@@ -154,11 +148,14 @@ def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None):
     return got_food, game_over, new_portal
 
 
-def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=None):
+def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=None, ai_snake=[], ai_direction=None):
     moving = False
     move_by_key = False
     game_over = False
     got_food = False
+    ai_score = 0
+    new_portal = False
+    ai_new_portal = False
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -176,25 +173,38 @@ def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=
                         direction = LEFT
                     elif (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and direction != LEFT:
                         direction = RIGHT
-                    got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit)
+                    got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit, ai_snake)
                     move_by_key = True
                 if (event.key == pygame.K_r):
                     return True
                 elif (event.key == pygame.K_ESCAPE):
                     return False
 
-        if moving:
+        if moving and not game_over:
             if not move_by_key:
-                got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit)
+                got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit, ai_snake)
             else:
                 move_by_key = False
             if got_food:
                 score += 1
-                food_pos = random_food_position(snake)
+                unallowed_spots = [portal_entry, portal_exit]
+                unallowed_spots.extend(ai_snake)
+                food_pos = random_food_position(snake, unallowed_spots)
                 rainbow_color = make_rainbow_color()
-            if new_portal:
-                portal_entry = random_portal_position(snake, food_pos)
-                portal_exit = random_portal_position(snake, food_pos, portal_entry)
+            if ai_snake:
+                ai_direction = simple_ai_direction_chooser(ai_direction, ai_snake, snake, food_pos, GRID_WIDTH, GRID_HEIGHT)
+                ai_got_food, ai_game_over, ai_new_portal = move_snake(ai_direction, ai_snake, food_pos, portal_entry, portal_exit, snake)
+                if ai_got_food:
+                    unallowed_spots = [portal_entry, portal_exit]
+                    unallowed_spots.extend(ai_snake)
+                    food_pos = random_food_position(snake, unallowed_spots)
+                    ai_score += 1
+                if ai_game_over:
+                    ai_snake = [random_empty_position(snake, food_pos, [portal_entry, portal_exit])]
+                    ai_score = 0
+            if new_portal or ai_new_portal:
+                portal_entry = random_empty_position(snake, food_pos)
+                portal_exit = random_empty_position(snake, food_pos, [portal_entry])
 
         # Draw everything
         screen.fill(BLACK)
@@ -202,6 +212,10 @@ def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=
         # --- Draw score above the play area ---
         score_text = font.render(f"Score: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
+        if AI_ON:
+            ai_score_text = font.render(f"AI Score: {ai_score}", True, WHITE)
+            text_width = ai_score_text.get_width()
+            screen.blit(ai_score_text, (WINDOW_WIDTH - 10 - text_width, 10))
 
         # --- Draw play area below ---
         r = min(255, max(0, (score - 8) * 20))
@@ -211,14 +225,17 @@ def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=
         if snake_color == WHITE:
             snake_color = rainbow_color
 
-        draw_snake(snake, snake_color)
-        draw_food(food_pos)
+
         draw_walls()
         if game_over:
             draw_game_over()
         if PORTALS_ON:
             draw_portal(portal_entry)
             draw_portal(portal_exit)
+        if AI_ON:
+            draw_snake(ai_snake, BLUE)
+        draw_snake(snake, snake_color)
+        draw_food(food_pos)
 
         pygame.display.flip()
         clock.tick(FPS)
