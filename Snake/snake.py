@@ -134,6 +134,9 @@ def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, 
     ):
         game_over = True
 
+    if game_over and new_head == snake[-1] or new_head == other_snake[-1]:
+        game_over = False # snake can move into the spot that the snake is moving away from
+
     got_food = False
     new_portal = False
     if not game_over:
