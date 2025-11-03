@@ -1,12 +1,10 @@
 from constants import *
 
 def signof(x):
-    if x > 0:
+    if x >= 0: # need to also go on equal so that the direction is not (0, 0)
         return 1
-    elif x < 0:
-        return -1
     else:
-        return 0
+        return -1
 
 def ai_headed_towards_food(current_dir, x_from_food, y_from_food):
     dx, dy = current_dir
