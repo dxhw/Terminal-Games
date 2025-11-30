@@ -120,6 +120,7 @@ def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, 
     game_over = False
     new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
     if PORTALS_ON:
+        assert portal_exit != None and portal_entry != None
         if new_head == portal_entry:
             new_head = portal_exit[0] + direction[0], portal_exit[1] + direction[1]
             snake.insert(0, portal_entry)
@@ -130,7 +131,8 @@ def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, 
     if (
         new_head[0] <= 0 or new_head[0] >= GRID_WIDTH - 1 or
         new_head[1] <= 0 or new_head[1] >= GRID_HEIGHT - 1 or
-        new_head in snake or new_head in other_snake
+        ((new_head in snake or new_head in other_snake) and 
+        (new_head != portal_entry) and (new_head != portal_exit))
     ):
         game_over = True
 
@@ -147,7 +149,10 @@ def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, 
         else:
             popped = snake.pop()
             if PORTALS_ON:
-                if popped == portal_exit or popped == portal_entry:
+                exited_portal = popped == portal_exit or popped == portal_entry
+                portal_entry_in_use = portal_entry in snake or portal_entry in other_snake
+                portal_exit_in_use = portal_exit in snake or portal_exit in other_snake
+                if exited_portal and not portal_entry_in_use and not portal_exit_in_use:
                     new_portal = True
     return got_food, game_over, new_portal
 
@@ -233,12 +238,12 @@ def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=
         draw_walls()
         if game_over:
             draw_game_over()
-        if PORTALS_ON:
-            draw_portal(portal_entry)
-            draw_portal(portal_exit)
         if AI_ON:
             draw_snake(ai_snake, BLUE)
         draw_snake(snake, snake_color)
+        if PORTALS_ON:
+            draw_portal(portal_entry)
+            draw_portal(portal_exit)
         draw_food(food_pos)
 
         pygame.display.flip()
