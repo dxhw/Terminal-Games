@@ -4,13 +4,14 @@ from game.constants import *
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
+GRAY = (120, 120, 120)
 BACKGROUND_COLOR = (200, 200, 200)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
 IN_DARK_MODE = False
 CELL_SIZE = DEFAULT_SCALE
 
-def update_cell_size(scale: int = None, increase=False, decrease=False):
+def update_cell_size(scale=None, increase=False, decrease=False):
     global CELL_SIZE
     if scale:
         CELL_SIZE = scale
@@ -28,7 +29,7 @@ def get_mouse_cell() -> tuple[int, int]:
     cell_y = (mouse_y - (MARGIN + 100)) // CELL_SIZE
     return cell_x, cell_y
 
-def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState = None):
+def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState):
     """
     Renders the game board, user input, clues, and the correct tile counter.
 
@@ -99,7 +100,8 @@ def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState = N
 
     # Draw row clues
     for i, clue in enumerate(row_clues):
-        text = font.render(" ".join(map(str, clue)), True, BLACK)
+        clue_color = GRAY if game.check_clues_match(i) else BLACK
+        text = font.render(" ".join(map(str, clue)), True, clue_color)
         text_rect = text.get_rect(
             right=offset_x - 10, centery=offset_y + i * CELL_SIZE + CELL_SIZE // 2
         )
@@ -107,8 +109,9 @@ def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState = N
 
     # Draw column clues
     for i, clue in enumerate(col_clues):
+        clue_color = GRAY if game.check_clues_match(i, False) else BLACK
         for j, line in enumerate(clue):
-            text = font.render(str(line), True, BLACK)
+            text = font.render(str(line), True, clue_color)
             text_rect = text.get_rect(
                 center=(
                     offset_x + i * CELL_SIZE + CELL_SIZE // 2,
@@ -153,19 +156,21 @@ def draw_board(screen: pygame.Surface, game: Nonogram, drag_state: DragState = N
     screen.blit(autoflag_prompt_text, (autoflag_prompt_bg.x + 10, autoflag_prompt_bg.y + 4))
 
 
-def dark_mode(to_dark: bool = None):
+def dark_mode(to_dark = None):
     """Turn on/off dark mode"""
-    global WHITE, BLACK, BACKGROUND_COLOR, BLUE, YELLOW, IN_DARK_MODE
+    global WHITE, BLACK, BACKGROUND_COLOR, BLUE, YELLOW, IN_DARK_MODE, GRAY
     to_dark = not(IN_DARK_MODE) if to_dark == None else to_dark
     if to_dark:
         WHITE = D_WHITE
         BLACK = D_BLACK
+        GRAY = D_GRAY
         BACKGROUND_COLOR = D_BACKGROUND_COLOR
         BLUE = D_BLUE
         YELLOW = D_YELLOW
     else:
         WHITE = L_WHITE
         BLACK = L_BLACK
+        GRAY = L_GRAY
         BACKGROUND_COLOR = L_BACKGROUND_COLOR
         BLUE = L_BLUE
         YELLOW = L_YELLOW

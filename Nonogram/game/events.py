@@ -5,7 +5,7 @@ from game.board import Nonogram
 
 
 def update_cell_value(
-    current_value: CellState, key: int, mode: DragMode
+    current_value: CellState, key: int | None, mode: DragMode | None
 ) -> tuple[CellState, bool]:
     """Determines the new correct cell value for a given cell based on its current value, the
     selected key, and the selected mode.
@@ -38,7 +38,7 @@ def update_cell_value(
 
 
 def handle_event(
-    event: pygame.event, game: Nonogram, drag_state: DragState, help_mode: bool
+    event: pygame.event.Event, game: Nonogram, drag_state: DragState, help_mode: bool
 ) -> tuple[DragState, bool]:
     if help_mode:
         return drag_state, handle_help_event(event)
@@ -49,7 +49,7 @@ def handle_event(
     return drag_state, help_mode
 
 
-def handle_help_event(event: pygame.event) -> bool:
+def handle_help_event(event: pygame.event.Event) -> bool:
     if event.type != pygame.KEYDOWN:
         return True
     if event.key in (pygame.K_ESCAPE, pygame.K_h):
@@ -63,7 +63,7 @@ def handle_help_event(event: pygame.event) -> bool:
     return True
 
 
-def determine_drag_mode(selected_cell: CellState, drag_key: int) -> DragMode:
+def determine_drag_mode(selected_cell: CellState, drag_key: int | None) -> DragMode | None:
     if drag_key == pygame.K_SPACE:
         if selected_cell == CellState.FILLED:
             return DragMode.DESELECT
@@ -83,7 +83,7 @@ def determine_drag_mode(selected_cell: CellState, drag_key: int) -> DragMode:
 
 
 def handle_mouse_down(
-    event: pygame.event, game: Nonogram, drag_state: DragState
+    event: pygame.event.Event, game: Nonogram, drag_state: DragState
 ) -> tuple[DragState, bool]:
     cell_x, cell_y = get_mouse_cell()
     if not (0 <= cell_x < game.width and 0 <= cell_y < game.height):
@@ -107,7 +107,7 @@ def handle_mouse_down(
 
 
 def handle_key_down(
-    event: pygame.event, game: Nonogram, drag_state: DragState
+    event: pygame.event.Event, game: Nonogram, drag_state: DragState
 ) -> tuple[DragState, bool]:
     if event.key == pygame.K_h:
         drag_state.reset()

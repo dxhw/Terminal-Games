@@ -70,41 +70,37 @@ class Nonogram:
         ]
         self.correct_count = 0
         pygame.display.set_caption("Nonogram")
+    
+    def check_clues_match(self, line_idx: int, is_row=True) -> bool:
+        """Check if column/row matches clues"""
+        if is_row:
+            line = [self.user_board[line_idx][x] for x in range(self.width)]
+            return extract_clues(line) == self.get_row_clues()[line_idx]
+        else:
+            line = [self.user_board[y][line_idx] for y in range(self.height)]
+            return extract_clues(line) == self.get_col_clues()[line_idx]
 
     def check_correct(self):
         """Updates the number of filled tiles, auto-flags completed rows/columns, and checks win condition."""
 
-        def extract_clues(line: list[CellState]):
-            """Extract the clues that the users selections would match"""
-            groups = "".join(
-                ["1" if cell == CellState.FILLED else "0" for cell in line]
-            ).split("0")
-            clues = [len(group) for group in groups if group]
-            return clues if clues else [0]
-
         def autofill_line(line_idx: int, is_row=True) -> bool:
             """Flag remaining tiles in column/row with completed clues"""
-            # it's super lame to have the board autofill with x's for a 0 row/column, so ignore [0]
+            clues_match = self.check_clues_match(line_idx, is_row)
             if is_row:
                 line = [self.user_board[line_idx][x] for x in range(self.width)]
-                clues_match: bool = (
-                    extract_clues(line) == self.get_row_clues()[line_idx]
-                )
+                # it's super lame to have the board autofill with x's for a 0 row/column, so ignore [0]
                 if clues_match and extract_clues(line) != [0]:
                     for x in range(self.width):
                         if self.user_board[line_idx][x] == CellState.EMPTY:
                             self.user_board[line_idx][x] = CellState.CROSSED
-                return clues_match
             else:
                 line = [self.user_board[y][line_idx] for y in range(self.height)]
-                clues_match: bool = (
-                    extract_clues(line) == self.get_col_clues()[line_idx]
-                )
+                # it's super lame to have the board autofill with x's for a 0 row/column, so ignore [0]
                 if clues_match and extract_clues(line) != [0]:
                     for y in range(self.height):
                         if self.user_board[y][line_idx] == CellState.EMPTY:
                             self.user_board[y][line_idx] = CellState.CROSSED
-                return clues_match
+            return clues_match
 
         # Count correct selections
         selected = sum(
@@ -113,9 +109,9 @@ class Nonogram:
         self.correct_count = selected
 
         # Auto-fill matched rows and columns
-        if self.autoflag:
-            rows_match = all([autofill_line(y, is_row=True) for y in range(self.height)])
-            cols_match = all([autofill_line(x, is_row=False) for x in range(self.width)])
+        applied_func = autofill_line if self.autoflag else self.check_clues_match
+        rows_match = all([applied_func(y, is_row=True) for y in range(self.height)])
+        cols_match = all([applied_func(x, is_row=False) for x in range(self.width)])
 
         # Check win condition
         if selected == self.correct_total:
@@ -165,3 +161,11 @@ class Nonogram:
                 clue.append(count)
             clues.append(clue or [0])
         return clues
+    
+def extract_clues(line: list[CellState]):
+    """Extract the clues that the users selections would match"""
+    groups = "".join(
+        ["1" if cell == CellState.FILLED else "0" for cell in line]
+    ).split("0")
+    clues = [len(group) for group in groups if group]
+    return clues if clues else [0]

@@ -4,10 +4,10 @@ from enum import Enum, auto
 class DragState:
     def __init__(self):
         self.dragging: bool = False  # True or False (is dragging on)
-        self.key = None  # pygame.K_SPACE or pygame.K_x
-        self.start: tuple[int, int] = None  # (x, y)
-        self.axis: DragAxis = None
-        self.mode: DragMode = None
+        self.key: int | None = None  # pygame.K_SPACE or pygame.K_x
+        self.start: tuple[int, int] | None = None  # (x, y)
+        self.axis: DragAxis | None = None
+        self.mode: DragMode | None = None
 
     def reset(self):
         self.dragging = False
@@ -49,6 +49,7 @@ RED = (255, 0, 0)
 # Light mode colors
 L_WHITE = (255, 255, 255)
 L_BLACK = (0, 0, 0)
+L_GRAY = (120, 120, 120)
 L_BACKGROUND_COLOR = (200, 200, 200)
 L_BLUE = (0, 0, 255)
 L_YELLOW = (255, 255, 0)
@@ -56,6 +57,7 @@ L_YELLOW = (255, 255, 0)
 # Dark mode colors
 D_WHITE = (0, 0, 0)
 D_BLACK = (255, 255, 255)
+D_GRAY = L_GRAY
 D_BACKGROUND_COLOR = (40, 40, 40)
 D_BLUE = (144, 213, 255)
 D_YELLOW = (245, 164, 0)
