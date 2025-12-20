@@ -14,6 +14,17 @@ parser.add_argument("-width", dest="g_width", help="width to be used for the boa
 parser.add_argument("-speed", dest="speed", help="the speed of the game (in FPS), default is 10", default=10, type=int)
 parser.add_argument("-portals", action="store_true", help="include this flag to play with portals!")
 parser.add_argument("-ai", action="store_true", help="include this flag to play with an AI snake!")
+burst_mode = parser.add_mutually_exclusive_group()
+burst_mode.add_argument(
+    "-jump",
+    action="store_true",
+    help="include this flag to play with a snake that jumps with SPACE!"
+)
+burst_mode.add_argument(
+    "-burst",
+    action="store_true",
+    help="include this flag to play with a snake that speeds up with SPACE!"
+)
 
 args = parser.parse_args()
 
@@ -27,6 +38,8 @@ WINDOW_HEIGHT = CELL_SIZE * GRID_HEIGHT + SCORE_AREA_HEIGHT
 PORTALS_ON = args.portals
 AI_ON = args.ai
 FPS = args.speed
+JUMP = args.jump
+BURST = args.burst
 
 # Validation logic for custom game size
 if CELL_SIZE <= 0 or GRID_WIDTH <= 0 or GRID_HEIGHT <= 0 or FPS <= 0:
@@ -116,9 +129,11 @@ def draw_game_over():
     text = font.render("GAME OVER - (R)estart", True, RED)
     screen.blit(text, (WINDOW_WIDTH // 2 - text.get_width() // 2, 10))
 
-def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, other_snake=[]):
+def move_snake(direction, snake, food_pos, portal_entry=None, portal_exit=None, other_snake=[], jumping=False):
     game_over = False
     new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
+    if jumping:
+        new_head = (new_head[0] + direction[0], new_head[1] + direction[1])
     if PORTALS_ON:
         assert portal_exit != None and portal_entry != None
         if new_head == portal_entry:
@@ -173,6 +188,8 @@ def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=
 
             elif event.type == pygame.KEYDOWN:
                 moving = True
+                jumping = False
+                bursting = False
                 if not game_over:
                     if (event.key == pygame.K_UP or event.key == pygame.K_w) and direction != UP:
                         direction = DOWN
@@ -182,8 +199,17 @@ def game_loop(snake, direction, food_pos, score, portal_entry=None, portal_exit=
                         direction = LEFT
                     elif (event.key == pygame.K_RIGHT or event.key == pygame.K_d) and direction != LEFT:
                         direction = RIGHT
-                    got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit, ai_snake)
+                    elif (event.key == pygame.K_SPACE):
+                        jumping = JUMP
+                        bursting = BURST
+
+                    got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit, ai_snake, jumping)
+                    if bursting and not got_food and not game_over and not new_portal: # don't need to process something else
+                            got_food, game_over, new_portal = move_snake(direction, snake, food_pos, portal_entry, portal_exit, ai_snake)
+                            
                     move_by_key = True
+                    jumping = False
+                    bursting = False
                 if (event.key == pygame.K_r):
                     return True
                 elif (event.key == pygame.K_ESCAPE):
